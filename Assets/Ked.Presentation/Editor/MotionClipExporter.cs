@@ -22,6 +22,8 @@ using UnityEngine;
 //
 // 리그는 런타임 코드가 아니라 **rig-schemas.json**으로 안다 — 이 도구의 의존은 코어(규약)와 데이터 파일뿐이다.
 // 그래서 저작 도구(VnTool)와 같은 조건이고, 언젠가 따로 떼어도 코드가 안 바뀐다.
+// 노드는 끝 이름만이 아니라 **부모 사슬 전체**를 대조한다 — 끝 이름이 같아도 계층이 다른 리그에서 만든 클립은 거부된다.
+// 제작 리그는 Ked/Motion/Create Authoring Rig가 스키마로 세운다(MotionAuthoringRig).
 //
 // 쓴 파일은 바로 MotionLibrary로 되읽어 개수를 대조한다 — 로더가 못 읽는 것을 냈으면 여기서 실패한다.
 // 재내보내기 시 바이트 동일: 타임스탬프 없음, 필드 순서 고정, invariant "R", UTF-8(BOM 없음) + LF.
@@ -53,7 +55,7 @@ public static class MotionClipExporter
         List<MotionClip> clips = new();
         List<string> errors = new();
 
-        if (!TryLoadRigNodeIds(settings.rigSchemasPath, out Dictionary<string, HashSet<string>> rigs, out string loadError))
+        if (!TryLoadRigSchemas(settings.rigSchemasPath, out Dictionary<string, RigNodeSet> rigs, out string loadError))
         {
             Debug.LogError($"[MotionClipExporter] {settings.name}: {loadError}", settings);
             return false;
@@ -73,13 +75,13 @@ public static class MotionClipExporter
                 continue;
             }
 
-            if (!rigs.TryGetValue(def.rigSchemaId ?? "", out HashSet<string> nodeIds))
+            if (!rigs.TryGetValue(def.rigSchemaId ?? "", out RigNodeSet rig))
             {
                 errors.Add($"'{def.name}': rig-schemas.json에 리그 '{def.rigSchemaId}'가 없다");
                 continue;
             }
 
-            if (TryConvert(def.clip, def.EffectiveName, def.rigSchemaId, def.end, def.ModeOf, nodeIds, out MotionClip clip, out List<string> why))
+            if (TryConvert(def.clip, def.EffectiveName, def.rigSchemaId, def.end, def.ModeOf, rig, out MotionClip clip, out List<string> why))
                 clips.Add(clip);
             else
                 errors.AddRange(why);
@@ -113,8 +115,15 @@ public static class MotionClipExporter
         return true;
     }
 
-    /// <summary>rig-schemas.json → rigKind별 노드 id 집합(__root 제외). 코어 DTO로 읽는다 — 런타임 스키마 코드를 모른다.</summary>
-    public static bool TryLoadRigNodeIds(string rigSchemasPath, out Dictionary<string, HashSet<string>> rigs, out string error)
+    /// <summary>리그 하나의 노드 id와, 루트 직속부터의 기대 경로(id를 '/'로 이은 것, __root 제외).</summary>
+    public sealed class RigNodeSet
+    {
+        public readonly HashSet<string> Ids = new();
+        public readonly Dictionary<string, string> PathOf = new();
+    }
+
+    /// <summary>rig-schemas.json → rigKind별 노드 집합. 코어 DTO로 읽는다 — 런타임 스키마 코드를 모른다.</summary>
+    public static bool TryLoadRigSchemas(string rigSchemasPath, out Dictionary<string, RigNodeSet> rigs, out string error)
     {
         rigs = null;
         error = null;
@@ -137,19 +146,25 @@ public static class MotionClipExporter
             return false;
         }
 
-        rigs = new Dictionary<string, HashSet<string>>();
+        rigs = new Dictionary<string, RigNodeSet>();
 
         foreach (RigSchemaRigDto rig in file.rigs)
         {
-            HashSet<string> ids = new();
+            RigNodeSet set = new();
 
+            // 부모가 항상 자식보다 먼저 온다(덤프 규약) — 순서대로 경로를 잇는다.
             foreach (RigSchemaNodeDto node in rig.nodes ?? new List<RigSchemaNodeDto>())
             {
-                if (!string.IsNullOrEmpty(node.id) && node.id != "__root")
-                    ids.Add(node.id);
+                if (string.IsNullOrEmpty(node.id) || node.id == "__root")
+                    continue;
+
+                set.Ids.Add(node.id);
+                set.PathOf[node.id] = !string.IsNullOrEmpty(node.parent) && set.PathOf.TryGetValue(node.parent, out string parentPath)
+                    ? parentPath + "/" + node.id
+                    : node.id;
             }
 
-            rigs[rig.rigKind ?? ""] = ids;
+            rigs[rig.rigKind ?? ""] = set;
         }
 
         return true;
@@ -164,7 +179,7 @@ public static class MotionClipExporter
         string rig,
         MotionEnd end,
         Func<string, MotionChannelKind, MotionChannelMode> modeOf,
-        ICollection<string> rigNodeIds,
+        RigNodeSet rig,
         out MotionClip result,
         out List<string> errors)
     {
@@ -189,9 +204,9 @@ public static class MotionClipExporter
                 continue;
             }
 
-            if (!TryMapNode(binding.path, rigNodeIds, out string node))
+            if (!TryMapNode(binding.path, rig, out string node, out string pathWhy))
             {
-                errors.Add($"{label}: 경로 '{binding.path}'의 끝이 리그 스키마의 노드가 아니다");
+                errors.Add($"{label}: {pathWhy}");
                 continue;
             }
 
@@ -232,7 +247,7 @@ public static class MotionClipExporter
             converted.Channels[i] = channels[order[i]];
 
         // 규칙은 코어 한 곳 — 로더와 같은 함수.
-        if (!MotionRules.TryValidate(converted, rigNodeIds, out string reason))
+        if (!MotionRules.TryValidate(converted, rig.Ids, out string reason))
         {
             errors.Add($"{label}: {reason}");
             return false;
@@ -293,28 +308,58 @@ public static class MotionClipExporter
         return true;
     }
 
-    // 경로의 마지막 마디 → 노드 id. 리그 노드 이름은 {rolePrefix}{id}라 끝맞춤으로 찾되, 가장 긴 id를 고른다.
-    private static bool TryMapNode(string path, ICollection<string> rigNodeIds, out string node)
+    // 경로 → 노드 id. 끝 마디로 id를 찾고(리그 노드 이름은 {rolePrefix}{id}라 끝맞춤, 가장 긴 id), 그 다음 **부모 사슬 전체**를
+    // 스키마의 기대 경로와 마디마다 대조한다. 끝 이름만 같고 계층이 다른 클립(스키마 밖 리그에서 만든 것)은 여기서 걸린다.
+    private static bool TryMapNode(string path, RigNodeSet rig, out string node, out string why)
     {
         node = null;
+        why = null;
 
         if (string.IsNullOrEmpty(path))
-            return false;
-
-        int slash = path.LastIndexOf('/');
-        string leaf = slash >= 0 ? path.Substring(slash + 1) : path;
-
-        foreach (string id in rigNodeIds)
         {
-            if (leaf == id || leaf.EndsWith(id, StringComparison.Ordinal))
+            why = "리그 루트 자체에 키가 있다 — 루트는 노드가 아니다";
+            return false;
+        }
+
+        string[] actual = path.Split('/');
+        string leaf = actual[actual.Length - 1];
+
+        foreach (string id in rig.Ids)
+        {
+            if (SegmentMatches(leaf, id) && (node == null || id.Length > node.Length))
+                node = id;
+        }
+
+        if (node == null)
+        {
+            why = $"경로 '{path}'의 끝이 리그 스키마의 노드가 아니다";
+            return false;
+        }
+
+        string[] expected = rig.PathOf[node].Split('/');
+
+        if (actual.Length != expected.Length)
+        {
+            why = $"노드 '{node}'의 계층이 스키마와 다르다 — 기대 '{rig.PathOf[node]}', 실제 '{path}'. 제작 리그는 Ked/Motion/Create Authoring Rig로 세울 것";
+            node = null;
+            return false;
+        }
+
+        for (int i = 0; i < expected.Length; i++)
+        {
+            if (!SegmentMatches(actual[i], expected[i]))
             {
-                if (node == null || id.Length > node.Length)
-                    node = id;
+                why = $"노드 '{node}'의 계층이 스키마와 다르다 — 기대 '{rig.PathOf[node]}', 실제 '{path}'. 제작 리그는 Ked/Motion/Create Authoring Rig로 세울 것";
+                node = null;
+                return false;
             }
         }
 
-        return node != null;
+        return true;
     }
+
+    private static bool SegmentMatches(string segment, string id)
+        => segment == id || segment.EndsWith(id, StringComparison.Ordinal);
 
     private static bool TryConvertKeys(AnimationCurve curve, string label, List<string> errors, out CurveKey[] keys)
     {

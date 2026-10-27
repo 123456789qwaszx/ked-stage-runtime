@@ -10,7 +10,8 @@
 | 규약·검증·샘플링 수학 | **Core** (`Motion/`) | 순수 C#. 내보내기·로더·저작 도구(VnTool)가 같은 함수를 쓴다 — "툴에선 되는데 재생에서 사라지는" 모션이 없다 |
 | 제작 원본 | **AnimationClip + MotionDefinition** (Unity 에셋) | Animation 창에서 키잉하고, 뜻(id·리그·end·mode)은 `MotionDefinition`에 적는다. 클립 이름에 뜻을 숨기지 않는다 |
 | 산출물 | **motions.json** | 원본을 변환한 것. **손으로 고치지 않는다.** 게임 콘텐츠라 대본 번들 곁(`curves.json` 옆)에 산다 |
-| 내보내기 | `Editor/MotionClipExporter` | 의존은 **Core + rig-schemas.json**뿐이다(런타임 스키마 코드를 모른다). 언젠가 따로 떼어도 코드가 안 바뀐다 |
+| 제작 리그 | `Editor/MotionAuthoringRig` (메뉴 Ked/Motion/Create Authoring Rig) | 재생이 쓰는 `CharacterRigBuilder`가 **스키마로** 세운다 — 손으로 만든 프리팹을 쓰지 않는다. 기준 해상도 캔버스 아래, 초상 알파 1 |
+| 내보내기 | `Editor/MotionClipExporter` | 의존은 **Core + rig-schemas.json**뿐이다(런타임 스키마 코드를 모른다). 노드는 끝 이름이 아니라 **부모 사슬 전체**를 대조한다 — 계층이 다른 리그에서 만든 클립은 거부. 언젠가 따로 떼어도 코드가 안 바뀐다 |
 | 재생·정지 프레임 | `Runtime/MotionCommandCharR` · `Core/StageReducer`(`motion`) | 같은 `MotionMath`를 지난다 |
 | 대본 | VnTool | 이름만 쓴다: `<<motion slot 이름>>`. 어디로·언제는 VnTool, 어떻게는 모션 |
 
@@ -46,7 +47,7 @@
 | `x` `y` `z` | 성분별 키 | 생략 = 건드리지 않는다. `z`는 `euler`에만. 키 2개 이상, `t` 오름차순, 첫 키 `t=0`, 마지막 키 `t=duration` |
 | 키 | `t` 초 · `v` 값 · `inTangent` · `outTangent` | Unity `Keyframe`과 같은 Hermite. 가중 탄젠트·무한 탄젠트 없음 |
 
-Transform 경로는 파일에 없다. 내보내기가 경로의 끝 마디를 노드 id로 바꾼다 — 리그 내부 계층이 바뀌어도 데이터는 그대로다.
+Transform 경로는 파일에 없다. 내보내기가 경로를 노드 id로 바꾸되, 부모 사슬이 `rig-schemas.json`과 마디마다 같아야 한다(접두사는 허용). 리그 내부 계층이 바뀌면 덤프를 다시 내고 모션도 다시 내보낸다 — 조용히 맞는 척하지 않는다.
 
 ## 2. relative와 absolute
 
