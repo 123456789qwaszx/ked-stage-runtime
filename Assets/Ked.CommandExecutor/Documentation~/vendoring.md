@@ -13,7 +13,7 @@
 
 | | |
 |---|---|
-| 원본 | `ked-command-executor` · `main` @ `0ad0b3f` |
+| 원본 | `ked-command-executor` · `main` @ `d12e098` |
 | 마지막 동기화 | 2026-10-27 · 원본 → 사본 (첫 반입) |
 | 맞춘 것 | `Assets/Ked.CommandExecutor/` 전체 |
 | 코드 일치 | `.cs`·`.meta`·`.asmdef` 기준 `diff -r` 0건 (아래 "대조" 명령) |
