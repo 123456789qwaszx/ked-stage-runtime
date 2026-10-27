@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96e0a4b5c4e927741afd2a6d3d4f1951, type: 3}
+  m_Name: ScreenFlashPresetDB
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenFlashPresetDBSO
+  entries:
+  - key: clear
+    color: {r: 1, g: 1, b: 1, a: 1}
+    amount: 0
+    attackDuration: 0
+    holdDuration: 0
+    releaseDuration: 0
+    attackEase: 9
+    releaseEase: 9
+  - key: default
+    color: {r: 1, g: 1, b: 1, a: 1}
+    amount: 1
+    attackDuration: 0.02
+    holdDuration: 0.01
+    releaseDuration: 0.16
+    attackEase: 9
+    releaseEase: 9
+  - key: soft
+    color: {r: 1, g: 1, b: 1, a: 1}
+    amount: 0.5
+    attackDuration: 0.06
+    holdDuration: 0.02
+    releaseDuration: 0.3
+    attackEase: 9
+    releaseEase: 9
+  - key: hit
+    color: {r: 1, g: 0.16, b: 0.1, a: 1}
+    amount: 0.45
+    attackDuration: 0.015
+    holdDuration: 0.015
+    releaseDuration: 0.18
+    attackEase: 9
+    releaseEase: 9
+  - key: camera
+    color: {r: 1, g: 1, b: 1, a: 1}
+    amount: 1
+    attackDuration: 0.01
+    holdDuration: 0
+    releaseDuration: 0.1
+    attackEase: 6
+    releaseEase: 9

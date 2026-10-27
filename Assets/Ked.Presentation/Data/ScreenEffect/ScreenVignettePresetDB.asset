@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b421a1e5374904fb56661fcb7556c2, type: 3}
+  m_Name: ScreenVignettePresetDB
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenVignettePresetDBSO
+  entries:
+  - key: clear
+    amount: 1
+    color: {r: 0, g: 0, b: 0, a: 1}
+    radius: 1
+    softness: 0.001
+    aspect: 1
+  - key: focus
+    amount: 0.35
+    color: {r: 0, g: 0, b: 0, a: 1}
+    radius: 0.25
+    softness: 0.1
+    aspect: 1.2
+  - key: tension
+    amount: 0.55
+    color: {r: 0, g: 0, b: 0, a: 1}
+    radius: 0.15
+    softness: 0.22
+    aspect: 1.2
+  - key: horror
+    amount: 0.78
+    color: {r: 0.02, g: 0.015, b: 0.018, a: 1}
+    radius: 0.14
+    softness: 0.36
+    aspect: 1.2
+  - key: danger
+    amount: 0.58
+    color: {r: 0.35, g: 0.02, b: 0.015, a: 1}
+    radius: 0.14
+    softness: 0.34
+    aspect: 1.2
+  - key: memory
+    amount: 0.36
+    color: {r: 0.34, g: 0.38, b: 0.48, a: 1}
+    radius: 0.1
+    softness: 0.36
+    aspect: 1.2
+  - key: dream
+    amount: 0.32
+    color: {r: 0.38, g: 0.32, b: 0.52, a: 1}
+    radius: 0.34
+    softness: 0.12
+    aspect: 1.2
+  - key: letterbox
+    amount: 1
+    color: {r: 0, g: 0, b: 0, a: 1}
+    radius: 0.288
+    softness: 0.001
+    aspect: 0
+  - key: iris
+    amount: 1
+    color: {r: 1, g: 0.8745098, b: 0.96673745, a: 1}
+    radius: 0
+    softness: 1.28
+    aspect: 2

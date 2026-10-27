@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf272319b6e14395ab2f88b1ba74d03b, type: 3}
+  m_Name: CharacterFocusTuningDB
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterFocusTuningDBSO
+  baseOffsets:
+    feet: {x: 0, y: 480}
+    body: {x: 0, y: 680}
+    bust: {x: 0, y: 820}
+    face: {x: 0, y: 950}
+    faceAura: {x: 0, y: 950}
+    handLeft: {x: -80, y: 0}
+    handRight: {x: 80, y: 0}
+  entries:
+  - key: Leafia
+    defaultOffset: {x: 0, y: 0}
+    offsets:
+      feet: {x: 0, y: 0}
+      body: {x: 0, y: 0}
+      bust: {x: 0, y: 0}
+      face: {x: 0, y: 0}
+      faceAura: {x: 0, y: 0}
+      handLeft: {x: 0, y: 0}
+      handRight: {x: 0, y: 0}
+  - key: Albedo
+    defaultOffset: {x: 0, y: 80}
+    offsets:
+      feet: {x: 0, y: 0}
+      body: {x: 0, y: 0}
+      bust: {x: 0, y: 0}
+      face: {x: 0, y: 0}
+      faceAura: {x: 0, y: 0}
+      handLeft: {x: 0, y: 0}
+      handRight: {x: 0, y: 0}
+  - key: jeoseungsaja
+    defaultOffset: {x: 180, y: 0}
+    offsets:
+      feet: {x: 0, y: 0}
+      body: {x: 0, y: 0}
+      bust: {x: 0, y: 0}
+      face: {x: 0, y: 0}
+      faceAura: {x: 0, y: 0}
+      handLeft: {x: 0, y: 0}
+      handRight: {x: 0, y: 0}
+  - key: Mercurio
+    defaultOffset: {x: -180, y: 0}
+    offsets:
+      feet: {x: 0, y: 0}
+      body: {x: 0, y: 0}
+      bust: {x: 0, y: 0}
+      face: {x: 30, y: 0}
+      faceAura: {x: 0, y: 0}
+      handLeft: {x: 0, y: 0}
+      handRight: {x: 0, y: 0}
+  - key: willow
+    defaultOffset: {x: 0, y: 0}
+    offsets:
+      feet: {x: 0, y: 0}
+      body: {x: 0, y: 0}
+      bust: {x: 0, y: 0}
+      face: {x: 0, y: 0}
+      faceAura: {x: 0, y: 0}
+      handLeft: {x: 0, y: 0}
+      handRight: {x: 0, y: 0}
+  - key: _
+    defaultOffset: {x: 0, y: 0}
+    offsets:
+      feet: {x: 0, y: 0}
+      body: {x: 0, y: 0}
+      bust: {x: 0, y: 0}
+      face: {x: 30, y: 0}
+      faceAura: {x: 0, y: 0}
+      handLeft: {x: 0, y: 0}
+      handRight: {x: 0, y: 0}

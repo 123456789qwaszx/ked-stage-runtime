@@ -1,0 +1,735 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6920a2d5359976349b21c374c18b12b5, type: 3}
+  m_Name: StageMaskMotionPresetDB
+  m_EditorClassIdentifier: Assembly-CSharp::StageMaskMotionPresetDBSO
+  entries:
+  - key: slant_in
+    kind: 1
+    fromOffset: {x: -2200, y: 0}
+    toOffset: {x: -770, y: 0}
+    slantPixels: 220
+    slantToRight: 0
+    flipVertical: 1
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 1
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.92}
+    edgeThickness: 6
+    hideEdgeOnComplete: 0
+    duration: 0.65
+    ease: 9
+    rubberMode: 1
+    overshootPixels: 72
+    overshootStart: 0.72
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: slant_out
+    kind: 1
+    fromOffset: {x: -770, y: 0}
+    toOffset: {x: -2200, y: 0}
+    slantPixels: 220
+    slantToRight: 0
+    flipVertical: 1
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 1
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.86}
+    edgeThickness: 6
+    hideEdgeOnComplete: 1
+    duration: 0.45
+    ease: 8
+    rubberMode: 2
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 24
+    pullEnd: 0.28
+    fullVisibleOnComplete: 0
+  - key: hstrip_open
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 360
+    horizontalBleedPixels: 96
+    animateStripHeight: 1
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.82}
+    edgeThickness: 4
+    hideEdgeOnComplete: 0
+    duration: 0.45
+    ease: 9
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: hstrip_close
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 96
+    animateStripHeight: 1
+    fromStripHeightPixels: 360
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.72}
+    edgeThickness: 4
+    hideEdgeOnComplete: 1
+    duration: 0.34
+    ease: 8
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: hstrip_in
+    kind: 2
+    fromOffset: {x: -2200, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 360
+    horizontalBleedPixels: 96
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.82}
+    edgeThickness: 4
+    hideEdgeOnComplete: 0
+    duration: 0.45
+    ease: 9
+    rubberMode: 1
+    overshootPixels: 48
+    overshootStart: 0.74
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: hstrip_out
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 2200, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 360
+    horizontalBleedPixels: 96
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.72}
+    edgeThickness: 4
+    hideEdgeOnComplete: 1
+    duration: 0.34
+    ease: 8
+    rubberMode: 2
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 18
+    pullEnd: 0.25
+    fullVisibleOnComplete: 0
+  - key: vstrip_open
+    kind: 3
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 520
+    verticalBleedPixels: 96
+    animateStripWidth: 1
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.78}
+    edgeThickness: 4
+    hideEdgeOnComplete: 0
+    duration: 0.42
+    ease: 9
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: vstrip_close
+    kind: 3
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 96
+    animateStripWidth: 1
+    fromVerticalStripWidthPixels: 520
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.72}
+    edgeThickness: 4
+    hideEdgeOnComplete: 1
+    duration: 0.32
+    ease: 8
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: vstrip_in
+    kind: 3
+    fromOffset: {x: 2200, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 520
+    verticalBleedPixels: 96
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.78}
+    edgeThickness: 4
+    hideEdgeOnComplete: 0
+    duration: 0.42
+    ease: 9
+    rubberMode: 1
+    overshootPixels: 42
+    overshootStart: 0.72
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: vstrip_out
+    kind: 3
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 2200, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 520
+    verticalBleedPixels: 96
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.72}
+    edgeThickness: 4
+    hideEdgeOnComplete: 1
+    duration: 0.32
+    ease: 8
+    rubberMode: 2
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 18
+    pullEnd: 0.25
+    fullVisibleOnComplete: 0
+  - key: band_in
+    kind: 4
+    fromOffset: {x: -2600, y: 0}
+    toOffset: {x: 1100, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 760
+    diagonalBandSlantPixels: 520
+    diagonalBandBleedPixels: 320
+    diagonalBandToRight: 1
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.88}
+    edgeThickness: 5
+    hideEdgeOnComplete: 0
+    duration: 0.38
+    ease: 12
+    rubberMode: 0
+    overshootPixels: 32
+    overshootStart: 0.968
+    pullPixels: 0
+    pullEnd: 0.01
+    fullVisibleOnComplete: 0
+  - key: band_out
+    kind: 4
+    fromOffset: {x: 1100, y: 0}
+    toOffset: {x: 2600, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 760
+    diagonalBandSlantPixels: 520
+    diagonalBandBleedPixels: 320
+    diagonalBandToRight: 1
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.78}
+    edgeThickness: 5
+    hideEdgeOnComplete: 1
+    duration: 0.28
+    ease: 11
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0.22
+    fullVisibleOnComplete: 0
+  - key: iris_in
+    kind: 5
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 1280
+    irisAspect: 1.777
+    irisSegments: 72
+    showEdge: 1
+    edgeMode: 4
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.66}
+    edgeThickness: 3
+    hideEdgeOnComplete: 1
+    duration: 0.5
+    ease: 9
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: iris_out
+    kind: 5
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 1280
+    toIrisRadiusPixels: 0
+    irisAspect: 1.777
+    irisSegments: 72
+    showEdge: 1
+    edgeMode: 4
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.66}
+    edgeThickness: 3
+    hideEdgeOnComplete: 1
+    duration: 0.42
+    ease: 8
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: shutter_close
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 96
+    animateStripHeight: 1
+    fromStripHeightPixels: 520
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.5}
+    edgeThickness: 3
+    hideEdgeOnComplete: 1
+    duration: 0.55
+    ease: 10
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: shutter_open
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 520
+    horizontalBleedPixels: 96
+    animateStripHeight: 1
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.5}
+    edgeThickness: 3
+    hideEdgeOnComplete: 1
+    duration: 0.42
+    ease: 10
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 1
+  - key: daze_close
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 96
+    animateStripHeight: 1
+    fromStripHeightPixels: 680
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.32}
+    edgeThickness: 2
+    hideEdgeOnComplete: 1
+    duration: 0.85
+    ease: 4
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: daze_open
+    kind: 2
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 680
+    horizontalBleedPixels: 96
+    animateStripHeight: 1
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 3
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.32}
+    edgeThickness: 2
+    hideEdgeOnComplete: 1
+    duration: 0.65
+    ease: 10
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 1
+  - key: strip_cover
+    kind: 0
+    fromOffset: {x: 0, y: 0}
+    toOffset: {x: 2400, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 1
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.4}
+    edgeThickness: 4
+    hideEdgeOnComplete: 1
+    duration: 0.4
+    ease: 10
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 0
+  - key: strip_clear
+    kind: 0
+    fromOffset: {x: 2400, y: 0}
+    toOffset: {x: 0, y: 0}
+    slantPixels: 0
+    slantToRight: 0
+    flipVertical: 0
+    stripHeightPixels: 0
+    horizontalBleedPixels: 0
+    animateStripHeight: 0
+    fromStripHeightPixels: 0
+    verticalStripWidthPixels: 0
+    verticalBleedPixels: 0
+    animateStripWidth: 0
+    fromVerticalStripWidthPixels: 0
+    diagonalBandWidthPixels: 0
+    diagonalBandSlantPixels: 0
+    diagonalBandBleedPixels: 0
+    diagonalBandToRight: 0
+    fromIrisRadiusPixels: 0
+    toIrisRadiusPixels: 0
+    irisAspect: 0
+    irisSegments: 0
+    showEdge: 1
+    edgeMode: 1
+    edgeColor: {r: 1, g: 1, b: 1, a: 0.4}
+    edgeThickness: 4
+    hideEdgeOnComplete: 1
+    duration: 0.4
+    ease: 1
+    rubberMode: 0
+    overshootPixels: 0
+    overshootStart: 0
+    pullPixels: 0
+    pullEnd: 0
+    fullVisibleOnComplete: 1

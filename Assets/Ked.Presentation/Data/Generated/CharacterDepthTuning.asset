@@ -1,0 +1,112 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0eb7388701df5fe46b03c2a443ce1e76, type: 3}
+  m_Name: CharacterDepthTuning
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterDepthTuningSO
+  presets:
+    far:
+      depthY: {x: 0, y: 480}
+      depthScale: 1
+      preserveFocusPreset: 0
+      preserveFocusOffset: {x: 0, y: 0}
+    back:
+      depthY: {x: 0, y: 240}
+      depthScale: 1.14
+      preserveFocusPreset: 20
+      preserveFocusOffset: {x: 0, y: 0}
+    mid:
+      depthY: {x: 0, y: 0}
+      depthScale: 1
+      preserveFocusPreset: 20
+      preserveFocusOffset: {x: 0, y: 0}
+    front:
+      depthY: {x: 0, y: -320}
+      depthScale: 1.38
+      preserveFocusPreset: 20
+      preserveFocusOffset: {x: 0, y: 0}
+    close:
+      depthY: {x: 0, y: 440}
+      depthScale: 1.58
+      preserveFocusPreset: 30
+      preserveFocusOffset: {x: 0, y: 0}
+    exp1:
+      depthY: {x: 0, y: 0}
+      depthScale: 1.8
+      preserveFocusPreset: 20
+      preserveFocusOffset: {x: 0, y: 0}
+    exp2:
+      depthY: {x: 0, y: 0}
+      depthScale: 1
+      preserveFocusPreset: 20
+      preserveFocusOffset: {x: 0, y: 0}
+  level:
+    yCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 120
+        inSlope: 0
+        outSlope: -56
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 20
+        value: -1000
+        inSlope: -56
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    scaleCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.86
+        inSlope: 0
+        outSlope: 0.051999997
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 10
+        value: 1.38
+        inSlope: 0.051999997
+        outSlope: 0.082
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 20
+        value: 2.2
+        inSlope: 0.082
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    farPreserveFocus: 0
+    midPreserveFocus: 20
+    closePreserveFocus: 20
+    frontPreserveFocus: 30
