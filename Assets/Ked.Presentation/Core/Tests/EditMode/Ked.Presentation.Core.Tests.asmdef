@@ -5,6 +5,7 @@
         "Ked.Presentation.Core",
         "Ked.Presentation.Runtime",
         "Ked.CommandExecutor",
+        "Ked.Presentation.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
