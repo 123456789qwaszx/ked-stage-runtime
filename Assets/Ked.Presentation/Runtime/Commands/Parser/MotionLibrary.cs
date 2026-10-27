@@ -12,16 +12,16 @@ using UnityEngine;
 // {
 //   "schema": "motions/1",
 //   "motions": [
-//     { "name": "nod", "rig": "character", "duration": 0.6,
+//     { "name": "nod", "rig": "character", "duration": 0.6, "end": "restore",
 //       "channels": [
-//         { "node": "CharacterPortrait_Track_Move_Y", "kind": "position", "mode": "offset",
+//         { "node": "CharacterPortrait_Track_Move_Y", "kind": "position", "mode": "relative",
 //           "y": [ { "t": 0, "v": 0, "inTangent": 0, "outTangent": -120 }, … ] }
 //       ] }
 //   ]
 // }
 //
-// kind: position | scale | euler · mode: offset | absolute (둘 다 필수 — 기본값 없음)
-// 성분 x·y·z는 생략 가능(= 건드리지 않는다). 키의 t는 **초**.
+// end: restore | commit (필수) · kind: position | scale | euler · mode: relative | absolute (둘 다 필수 — 기본값 없음)
+// 성분 x·y·z는 생략 가능(= 건드리지 않는다). 키의 t는 **초**. 뜻은 docs/motion-contract.md가 규범이다.
 //
 // 검증은 코어 MotionRules 한 곳이다(어긋난 모션은 로그 + 무시). 내보내기도 같은 규칙을 쓰므로
 // "툴에서는 되는데 재생에서 사라지는" 모션이 안 생긴다.
@@ -119,6 +119,13 @@ public sealed class MotionLibrary
         }
 
         string name = string.IsNullOrEmpty(dto.name) ? "(이름 없음)" : dto.name;
+
+        if (!TryParseEnd(dto.end, out MotionEnd end))
+        {
+            Warn(sourceLabel, name, $"end는 restore|commit 이어야 한다 ('{dto.end}') — 기본값은 없다");
+            return false;
+        }
+
         MotionChannel[] channels = new MotionChannel[dto.channels?.Count ?? 0];
 
         for (int i = 0; i < channels.Length; i++)
@@ -139,7 +146,7 @@ public sealed class MotionLibrary
 
             if (!TryParseMode(c.mode, out MotionChannelMode mode))
             {
-                Warn(sourceLabel, name, $"채널 {i}: mode는 offset|absolute 여야 한다 ('{c.mode}') — 기본값은 없다");
+                Warn(sourceLabel, name, $"채널 {i}: mode는 relative|absolute 여야 한다 ('{c.mode}') — 기본값은 없다");
                 return false;
             }
 
@@ -154,7 +161,7 @@ public sealed class MotionLibrary
             };
         }
 
-        clip = new MotionClip { Name = dto.name, Rig = dto.rig, Duration = dto.duration, Channels = channels };
+        clip = new MotionClip { Name = dto.name, Rig = dto.rig, Duration = dto.duration, End = end, Channels = channels };
         return true;
     }
 
@@ -183,11 +190,21 @@ public sealed class MotionLibrary
         }
     }
 
+    private static bool TryParseEnd(string token, out MotionEnd end)
+    {
+        switch ((token ?? "").Trim().ToLowerInvariant())
+        {
+            case "restore": end = MotionEnd.Restore; return true;
+            case "commit": end = MotionEnd.Commit; return true;
+            default: end = default; return false;
+        }
+    }
+
     private static bool TryParseMode(string token, out MotionChannelMode mode)
     {
         switch ((token ?? "").Trim().ToLowerInvariant())
         {
-            case "offset": mode = MotionChannelMode.Offset; return true;
+            case "relative": mode = MotionChannelMode.Relative; return true;
             case "absolute": mode = MotionChannelMode.Absolute; return true;
             default: mode = default; return false;
         }
@@ -211,6 +228,7 @@ public sealed class MotionLibrary
         public string name = "";
         public string rig = "";
         public float duration = 0f;
+        public string end = "";
         public List<ChannelDto> channels = new();
     }
 

@@ -14,10 +14,11 @@ public sealed class MotionCommandSpecCharR : CharacterRigCommandSpecBase
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// motion — 모션 클립 재생. 채널마다 **마지막 키 = 클레임**이다.
+// motion — 모션 클립 재생. commit이면 채널마다 **마지막 키 = 클레임**이고, restore면 남기는 것이 없다.
 //
 // 세 갈래가 같은 값을 본다(MotionMath.ClaimFor):
-//   ① 장부 게시  — ClaimTarget에서 채널마다 종점을 게시한다(place가 정착 체인을 볼 수 있게)
+//   ① 장부 게시  — commit이면 ClaimTarget에서 채널마다 종점을 게시한다(place가 정착 체인을 볼 수 있게).
+//                  restore는 게시하지 않는다 — 정착값이 시작값 그대로라 남이 알아야 할 것이 없다(gesture와 같다)
 //   ② 트윈 종점  — 샘플러가 길이에서 쓰는 값이 그 종점이다(마지막 키 Time = 길이, 규칙)
 //   ③ 상태 폴드  — 리듀서 ApplyMotion이 같은 함수로 접는다
 //
@@ -155,7 +156,8 @@ public sealed class MotionCommandCharR : CommandBase
             b.End = MotionMath.EndValue(b.Channel, b.Start.ToCore()).ToUnity();
             _bound[i] = b;
 
-            Publish(b);
+            if (_spec.clip.End == MotionEnd.Commit)
+                Publish(b);
         }
     }
 

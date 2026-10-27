@@ -16,11 +16,14 @@ public class MotionRulesTests
     }
 
     private static MotionChannel Channel(string node = "CharacterPortrait_Track_Move_Y", MotionChannelKind kind = MotionChannelKind.Position,
-        MotionChannelMode mode = MotionChannelMode.Offset, CurveKey[] x = null, CurveKey[] y = null, CurveKey[] z = null)
+        MotionChannelMode mode = MotionChannelMode.Relative, CurveKey[] x = null, CurveKey[] y = null, CurveKey[] z = null)
         => new() { Node = node, Kind = kind, Mode = mode, X = x, Y = y, Z = z };
 
     private static MotionClip Clip(float duration = 0.6f, params MotionChannel[] channels)
-        => new() { Name = "nod", Rig = "character", Duration = duration, Channels = channels };
+        => new() { Name = "nod", Rig = "character", Duration = duration, End = MotionEnd.Commit, Channels = channels };
+
+    private static MotionClip Restore(float duration = 0.6f, params MotionChannel[] channels)
+        => new() { Name = "nod", Rig = "character", Duration = duration, End = MotionEnd.Restore, Channels = channels };
 
     private static MotionChannel Nod => Channel(y: Keys((0f, 0f), (0.3f, -18f), (0.6f, 0f)));
 
@@ -103,14 +106,54 @@ public class MotionRulesTests
     }
 
     [Test]
-    public void offset_채널은_0에서_시작해야_하고_absolute는_아니다()
+    public void relative_채널은_중립값에서_시작해야_하고_absolute는_아니다()
     {
         CurveKey[] from5 = Keys((0f, 5f), (0.6f, 0f));
 
-        Assert.IsFalse(MotionRules.TryValidate(Clip(0.6f, Channel(mode: MotionChannelMode.Offset, y: from5)), null, out string reason));
-        StringAssert.Contains("offset", reason);
+        Assert.IsFalse(MotionRules.TryValidate(Clip(0.6f, Channel(mode: MotionChannelMode.Relative, y: from5)), null, out string reason));
+        StringAssert.Contains("relative", reason);
 
         Assert.IsTrue(MotionRules.TryValidate(Clip(0.6f, Channel(mode: MotionChannelMode.Absolute, y: from5)), null, out reason), reason);
+
+        // 배율의 중립값은 1이다.
+        CurveKey[] scaleFrom0 = Keys((0f, 0f), (0.6f, 1f));
+        CurveKey[] scaleFrom1 = Keys((0f, 1f), (0.6f, 1.4f));
+
+        Assert.IsFalse(MotionRules.TryValidate(Clip(0.6f, Channel(kind: MotionChannelKind.Scale, mode: MotionChannelMode.Relative, x: scaleFrom0)), null, out reason));
+        StringAssert.Contains("중립값 1", reason);
+        Assert.IsTrue(MotionRules.TryValidate(Clip(0.6f, Channel(kind: MotionChannelKind.Scale, mode: MotionChannelMode.Relative, x: scaleFrom1)), null, out reason), reason);
+    }
+
+    [Test]
+    public void restore는_모든_채널이_relative이고_마지막_키가_중립값이어야_한다()
+    {
+        // 돌아오는 흔들림 — 통과.
+        Assert.IsTrue(MotionRules.TryValidate(Restore(0.6f, Nod), null, out string reason), reason);
+
+        // 마지막 키가 남는 relative — restore라면 선언과 키가 어긋난다.
+        Assert.IsFalse(MotionRules.TryValidate(Restore(0.6f, Channel(y: Keys((0f, 0f), (0.6f, -18f)))), null, out reason));
+        StringAssert.Contains("restore", reason);
+        StringAssert.Contains("commit", reason);
+
+        // 같은 키라도 commit이면 된다.
+        Assert.IsTrue(MotionRules.TryValidate(Clip(0.6f, Channel(y: Keys((0f, 0f), (0.6f, -18f)))), null, out reason), reason);
+
+        // absolute 채널은 restore에서 금지 — 끝에서 튄다.
+        Assert.IsFalse(MotionRules.TryValidate(Restore(0.6f, Channel(mode: MotionChannelMode.Absolute, y: Keys((0f, 3f), (0.6f, 0f)))), null, out reason));
+        StringAssert.Contains("absolute", reason);
+
+        // 배율 restore의 중립값은 1.
+        Assert.IsTrue(MotionRules.TryValidate(Restore(0.6f, Channel(kind: MotionChannelKind.Scale, x: Keys((0f, 1f), (0.3f, 1.2f), (0.6f, 1f)))), null, out reason), reason);
+    }
+
+    [Test]
+    public void end는_restore_또는_commit이어야_한다()
+    {
+        MotionClip clip = Clip(0.6f, Nod);
+        clip.End = (MotionEnd)7;
+
+        Assert.IsFalse(MotionRules.TryValidate(clip, null, out string reason));
+        StringAssert.Contains("end", reason);
     }
 
     [Test]

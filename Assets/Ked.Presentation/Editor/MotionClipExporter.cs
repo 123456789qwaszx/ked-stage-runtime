@@ -18,7 +18,10 @@ using UnityEngine;
 // 거부하는 것(이유를 전부 적어 돌려준다 — 조용히 빠뜨리지 않는다):
 //   · 다른 속성(m_LocalPosition은 anchoredPosition으로, m_LocalRotation은 회전 보간을 Euler Angles로)
 //   · 스키마에 없는 노드 · Track_Focus · 가중 탄젠트 · 무한 탄젠트(계단 키 — JSON에 Infinity가 없다)
-//   · 설정에 mode가 없는 채널 · MotionRules가 거르는 전부
+//   · MotionRules가 거르는 전부(restore인데 마지막 키가 중립값이 아닌 것 등)
+//
+// 리그는 런타임 코드가 아니라 **rig-schemas.json**으로 안다 — 이 도구의 의존은 코어(규약)와 데이터 파일뿐이다.
+// 그래서 저작 도구(VnTool)와 같은 조건이고, 언젠가 따로 떼어도 코드가 안 바뀐다.
 //
 // 쓴 파일은 바로 MotionLibrary로 되읽어 개수를 대조한다 — 로더가 못 읽는 것을 냈으면 여기서 실패한다.
 // 재내보내기 시 바이트 동일: 타임스탬프 없음, 필드 순서 고정, invariant "R", UTF-8(BOM 없음) + LF.
@@ -49,19 +52,34 @@ public static class MotionClipExporter
     {
         List<MotionClip> clips = new();
         List<string> errors = new();
-        string[] nodeIds = CharacterRigSchema.NodeIds();
 
-        foreach (MotionExportSettings.Entry entry in settings.entries)
+        if (!TryLoadRigNodeIds(settings.rigSchemasPath, out Dictionary<string, HashSet<string>> rigs, out string loadError))
         {
-            if (entry?.clip == null)
+            Debug.LogError($"[MotionClipExporter] {settings.name}: {loadError}", settings);
+            return false;
+        }
+
+        foreach (MotionDefinition def in settings.motions)
+        {
+            if (def == null)
             {
-                errors.Add("클립이 비어 있는 항목이 있다");
+                errors.Add("비어 있는 항목이 있다");
                 continue;
             }
 
-            string name = string.IsNullOrEmpty(entry.name) ? entry.clip.name : entry.name;
+            if (def.clip == null)
+            {
+                errors.Add($"'{def.name}': 클립이 없다");
+                continue;
+            }
 
-            if (TryConvert(entry.clip, name, settings.rig, ModeLookup(entry), nodeIds, out MotionClip clip, out List<string> why))
+            if (!rigs.TryGetValue(def.rigSchemaId ?? "", out HashSet<string> nodeIds))
+            {
+                errors.Add($"'{def.name}': rig-schemas.json에 리그 '{def.rigSchemaId}'가 없다");
+                continue;
+            }
+
+            if (TryConvert(def.clip, def.EffectiveName, def.rigSchemaId, def.end, def.ModeOf, nodeIds, out MotionClip clip, out List<string> why))
                 clips.Add(clip);
             else
                 errors.AddRange(why);
@@ -76,8 +94,8 @@ public static class MotionClipExporter
         string json = ToJson(clips);
         string outPath = Path.Combine(Path.GetDirectoryName(Application.dataPath)!, settings.outputPath);
 
-        // 되읽기 — 로더가 받아들이는 것만 낸다.
-        MotionLibrary check = MotionLibrary.Parse(json, settings.outputPath, nodeIds);
+        // 되읽기 — 로더가 받아들이는 것만 낸다. 노드 검증은 변환에서 했으므로 여기선 형식만.
+        MotionLibrary check = MotionLibrary.Parse(json, settings.outputPath);
 
         if (check.Count != clips.Count)
         {
@@ -95,27 +113,57 @@ public static class MotionClipExporter
         return true;
     }
 
-    private static Func<string, MotionChannelKind, MotionChannelMode?> ModeLookup(MotionExportSettings.Entry entry)
-        => (node, kind) =>
+    /// <summary>rig-schemas.json → rigKind별 노드 id 집합(__root 제외). 코어 DTO로 읽는다 — 런타임 스키마 코드를 모른다.</summary>
+    public static bool TryLoadRigNodeIds(string rigSchemasPath, out Dictionary<string, HashSet<string>> rigs, out string error)
+    {
+        rigs = null;
+        error = null;
+
+        string path = Path.IsPathRooted(rigSchemasPath)
+            ? rigSchemasPath
+            : Path.Combine(Path.GetDirectoryName(Application.dataPath)!, rigSchemasPath);
+
+        if (!File.Exists(path))
         {
-            foreach (MotionExportSettings.ChannelMode m in entry.channelModes)
+            error = $"rig-schemas.json이 없다: {rigSchemasPath} (튜닝 덤프를 먼저 낼 것)";
+            return false;
+        }
+
+        RigSchemasFileDto file = JsonUtility.FromJson<RigSchemasFileDto>(File.ReadAllText(path));
+
+        if (file?.rigs == null)
+        {
+            error = $"rig-schemas.json을 읽지 못했다: {rigSchemasPath}";
+            return false;
+        }
+
+        rigs = new Dictionary<string, HashSet<string>>();
+
+        foreach (RigSchemaRigDto rig in file.rigs)
+        {
+            HashSet<string> ids = new();
+
+            foreach (RigSchemaNodeDto node in rig.nodes ?? new List<RigSchemaNodeDto>())
             {
-                if (m != null && m.node == node && m.kind == kind)
-                    return m.mode;
+                if (!string.IsNullOrEmpty(node.id) && node.id != "__root")
+                    ids.Add(node.id);
             }
 
-            return null;
-        };
+            rigs[rig.rigKind ?? ""] = ids;
+        }
+
+        return true;
+    }
 
     /// <summary>
     /// 클립 하나를 변환한다. 실패하면 이유를 전부 모아 돌려준다(첫 오류에서 멈추지 않는다 — 작가가 한 번에 고치게).
-    /// modeOf가 null을 주는 채널은 거부한다 — mode에 기본값은 없다.
     /// </summary>
     public static bool TryConvert(
         AnimationClip clip,
         string name,
         string rig,
-        Func<string, MotionChannelKind, MotionChannelMode?> modeOf,
+        MotionEnd end,
+        Func<string, MotionChannelKind, MotionChannelMode> modeOf,
         ICollection<string> rigNodeIds,
         out MotionClip result,
         out List<string> errors)
@@ -154,15 +202,7 @@ public static class MotionClipExporter
 
             if (!channels.TryGetValue(id, out MotionChannel channel))
             {
-                MotionChannelMode? mode = modeOf?.Invoke(node, kind);
-
-                if (mode == null)
-                {
-                    errors.Add($"{label}: 채널 ({node}, {kind})의 mode가 설정에 없다 — offset|absolute 중 하나를 적을 것");
-                    continue;
-                }
-
-                channel = new MotionChannel { Node = node, Kind = kind, Mode = mode.Value };
+                channel = new MotionChannel { Node = node, Kind = kind, Mode = modeOf(node, kind) };
                 order.Add(id);
             }
 
@@ -184,6 +224,7 @@ public static class MotionClipExporter
             Name = name,
             Rig = rig,
             Duration = clip.length,
+            End = end,
             Channels = new MotionChannel[order.Count],
         };
 
@@ -323,14 +364,15 @@ public static class MotionClipExporter
             MotionClip clip = clips[m];
             sb.Append(m > 0 ? ",\n" : "\n");
             sb.Append("    { \"name\": \"").Append(clip.Name).Append("\", \"rig\": \"").Append(clip.Rig)
-              .Append("\", \"duration\": ").Append(F(clip.Duration)).Append(",\n      \"channels\": [");
+              .Append("\", \"duration\": ").Append(F(clip.Duration))
+              .Append(", \"end\": \"").Append(clip.End == MotionEnd.Restore ? "restore" : "commit").Append("\",\n      \"channels\": [");
 
             for (int c = 0; c < clip.Channels.Length; c++)
             {
                 MotionChannel ch = clip.Channels[c];
                 sb.Append(c > 0 ? ",\n" : "\n");
                 sb.Append("        { \"node\": \"").Append(ch.Node).Append("\", \"kind\": \"").Append(KindToken(ch.Kind))
-                  .Append("\", \"mode\": \"").Append(ch.Mode == MotionChannelMode.Offset ? "offset" : "absolute").Append('"');
+                  .Append("\", \"mode\": \"").Append(ch.Mode == MotionChannelMode.Relative ? "relative" : "absolute").Append('"');
                 AppendComponent(sb, "x", ch.X);
                 AppendComponent(sb, "y", ch.Y);
                 AppendComponent(sb, "z", ch.Z);

@@ -17,6 +17,12 @@
 
 그 밖에 `Data/`(프리셋 DB) · `Prefabs/`(리그 셋) · `Resources/`·`Shaders/`(시각 효과) · `Audio/`(믹서) · `ExportedTuning/`(튜닝 덤프와 [schema.md](ExportedTuning/schema.md)).
 
+## 모션
+
+모션 툴은 **Unity Animation 창**이다. 리그에 키잉하고 `MotionDefinition`(Create › Ked › Motion Definition)에 뜻(id·리그·end·mode)을 적은 뒤
+메뉴 **Ked › Motion › Export motions.json**으로 낸다. 대본은 `<<motion slot 이름>>`으로 이름만 쓴다.
+규약은 [docs/motion-contract.md](docs/motion-contract.md) — 파일 형식 · relative/absolute · 종료 정책(restore/commit) · 충돌 · 받는 속성.
+
 ## 무엇을 모르나
 
 - **재생을 모른다.** 줄 진행·롤백·백로그·시크·대사창·Yarn은 재생 저장소에 있다. 여기가 받는 것은 코어의 `StageCommand`(이름 + 문자열 인자)뿐이다.

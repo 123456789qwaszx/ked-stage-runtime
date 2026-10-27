@@ -182,10 +182,9 @@ namespace Ked.Presentation.Core
             => TryGetSpawnedSlot(state, cmd, out _, out reason);
 
         /// <summary>
-        /// motion(slot, name) — 채널마다 **마지막 키**를 그 노드의 클레임으로 접는다.
-        /// 종점이 평가 결과가 아니라 키 값이라 샘플링이 필요 없다 — "이징은 종점에 관여하지 않는다"가
-        /// 모션에서도 그대로 선다. offset 채널은 현재 상태 위에, absolute 채널은 그 값으로.
-        /// 순변위 0인 모션(몸짓)은 자연히 무변이 된다 — gesture와 같은 결과다.
+        /// motion(slot, name) — restore면 무변(gesture와 같다), commit이면 채널마다 **마지막 키**를 그 노드의
+        /// 클레임으로 접는다. 종점이 평가 결과가 아니라 키 값이라 샘플링이 필요 없다 — "이징은 종점에 관여하지
+        /// 않는다"가 모션에서도 그대로 선다. relative 채널은 현재 상태 위에(위치·회전 덧셈, 배율 곱셈), absolute는 그 값으로.
         ///
         /// 재생(MotionCommandCharR.ClaimTarget)과 같은 함수(MotionMath.ClaimFor)를 지난다 —
         /// 장부 게시·트윈 종점·상태 폴드가 같은 값을 본다.
@@ -221,6 +220,10 @@ namespace Ked.Presentation.Core
                     return false;
                 }
             }
+
+            // restore — 남기는 것이 없다. 노드 검사는 위에서 했다(없는 노드를 가리키는 모션은 restore라도 거짓이다).
+            if (clip.End == MotionEnd.Restore)
+                return true;
 
             for (int i = 0; i < clip.Channels.Length; i++)
             {

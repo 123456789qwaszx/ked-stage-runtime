@@ -16,14 +16,33 @@ namespace Ked.Presentation.Core
     }
 
     /// <summary>
-    /// 채널 값이 시작값에 더해지는지(offset), 그 자체인지(absolute).
-    /// 배치 축은 "지금 자리에서"가 자연스럽고(offset), 연기 축은 "이 포즈로"가 자연스럽다(absolute).
-    /// 채널마다 정한다 — 기본값은 없다. 빠지면 로더가 거부한다.
+    /// 채널 값이 시작값에 대한 변화인지(relative), 그 자체인지(absolute).
+    /// 배치 축은 "지금 자리에서"가 자연스럽고(relative), 연기 축은 "이 포즈로"가 자연스럽다(absolute).
+    /// relative의 뜻은 종류마다 다르다 — 위치·회전은 **덧셈**, 배율은 **곱셈**(MotionMath.Neutral: 0 · 0 · 1).
+    /// 채널마다 정한다 — 파일에 기본값은 없다. 빠지면 로더가 거부한다.
     /// </summary>
     public enum MotionChannelMode
     {
-        Offset,
+        Relative,
         Absolute,
+    }
+
+    /// <summary>
+    /// 모션이 끝난 뒤 무엇이 남는가. 정지 프레임(리듀서)·장부·Skip·Load·Rollback이 전부 이 선언을 본다.
+    /// </summary>
+    public enum MotionEnd
+    {
+        /// <summary>
+        /// 아무것도 남기지 않는다 — 흔들기·끄덕임. 모든 채널이 relative이고 마지막 키가 중립값이어야 한다(규칙이 검증).
+        /// 그래서 끝에서 튀지 않고, 리듀서는 무변으로 접고, 장부에 게시할 것이 없다(gesture와 같다).
+        /// </summary>
+        Restore,
+
+        /// <summary>
+        /// 마지막 키가 남는다 — 고개 숙인 채로, 자세 바꾸기. 채널마다 마지막 키가 그 노드의 클레임이다.
+        /// 중립값으로 끝나는 채널은 자연히 아무것도 남기지 않으므로, "어깨는 남고 고개는 돌아오는" 모션도 commit이다.
+        /// </summary>
+        Commit,
     }
 
     /// <summary>
@@ -60,8 +79,8 @@ namespace Ked.Presentation.Core
     /// 키 하나의 수학은 같다(CurveKey · CurveFunctions). 값은 리그 로컬 단위(px·배율·도)이고,
     /// 원근(DepthScale)·시차·카메라는 계층 위에서 곱해지므로 모션은 셋을 모른다.
     ///
-    /// 종점은 평가 결과가 아니라 **키 값**이다 — 채널마다 마지막 키가 그 노드의 클레임이 된다(MotionMath.ClaimFor).
-    /// 그래서 "이징은 종점에 관여하지 않는다"가 그대로 서고, 리듀서는 샘플링 없이 정지 프레임을 낸다.
+    /// 종점은 평가 결과가 아니라 **키 값**이다 — commit이면 채널마다 마지막 키가 그 노드의 클레임이 되고(MotionMath.ClaimFor),
+    /// restore면 남는 것이 없다. 그래서 "이징은 종점에 관여하지 않는다"가 그대로 서고, 리듀서는 샘플링 없이 정지 프레임을 낸다.
     /// </summary>
     [Serializable]
     public sealed class MotionClip
@@ -73,6 +92,9 @@ namespace Ked.Presentation.Core
 
         /// <summary>초. 모든 채널의 모든 성분이 이 시각에 마지막 키를 둔다(규칙).</summary>
         public float Duration;
+
+        /// <summary>끝난 뒤 무엇이 남는가. 파일에 기본값은 없다 — 빠지면 로더가 거부한다.</summary>
+        public MotionEnd End;
 
         public MotionChannel[] Channels;
     }

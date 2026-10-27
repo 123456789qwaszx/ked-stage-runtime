@@ -54,11 +54,17 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
+            if (!Enum.IsDefined(typeof(MotionEnd), clip.End))
+            {
+                reason = $"end는 restore 또는 commit이어야 한다 ({(int)clip.End})";
+                return false;
+            }
+
             HashSet<(string, MotionChannelKind)> seen = new();
 
             for (int i = 0; i < clip.Channels.Length; i++)
             {
-                if (!TryValidateChannel(clip.Channels[i], clip.Duration, rigNodeIds, out string why))
+                if (!TryValidateChannel(clip.Channels[i], clip.Duration, clip.End, rigNodeIds, out string why))
                 {
                     reason = $"채널 {i}: {why}";
                     return false;
@@ -76,7 +82,7 @@ namespace Ked.Presentation.Core
         }
 
         public static bool TryValidateChannel(
-            in MotionChannel channel, float duration, ICollection<string> rigNodeIds, out string reason)
+            in MotionChannel channel, float duration, MotionEnd end, ICollection<string> rigNodeIds, out string reason)
         {
             if (string.IsNullOrEmpty(channel.Node))
             {
@@ -123,13 +129,22 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
-            return TryValidateComponent("X", channel.X, channel.Mode, duration, out reason)
-                && TryValidateComponent("Y", channel.Y, channel.Mode, duration, out reason)
-                && TryValidateComponent("Z", channel.Z, channel.Mode, duration, out reason);
+            // restore는 "아무것도 남기지 않는다"는 보증이다 — absolute 채널은 끝에서 시작값으로 튈 수밖에 없으니 금지.
+            if (end == MotionEnd.Restore && channel.Mode != MotionChannelMode.Relative)
+            {
+                reason = "restore 모션의 채널은 relative여야 한다 (absolute는 끝에서 튄다)";
+                return false;
+            }
+
+            float neutral = MotionMath.Neutral(channel.Kind);
+
+            return TryValidateComponent("X", channel.X, channel.Mode, end, neutral, duration, out reason)
+                && TryValidateComponent("Y", channel.Y, channel.Mode, end, neutral, duration, out reason)
+                && TryValidateComponent("Z", channel.Z, channel.Mode, end, neutral, duration, out reason);
         }
 
         private static bool TryValidateComponent(
-            string label, CurveKey[] keys, MotionChannelMode mode, float duration, out string reason)
+            string label, CurveKey[] keys, MotionChannelMode mode, MotionEnd end, float neutral, float duration, out string reason)
         {
             reason = null;
 
@@ -165,10 +180,17 @@ namespace Ked.Presentation.Core
                 }
             }
 
-            // offset은 "지금 자리에서" 시작한다 — 첫 키가 0이 아니면 첫 프레임이 튄다.
-            if (mode == MotionChannelMode.Offset && Math.Abs(keys[0].Value) > Tolerance)
+            // relative는 "지금 자리에서" 시작한다 — 첫 키가 중립값(위치·회전 0, 배율 1)이 아니면 첫 프레임이 튄다.
+            if (mode == MotionChannelMode.Relative && Math.Abs(keys[0].Value - neutral) > Tolerance)
             {
-                reason = $"{label}: offset 채널의 첫 키 값이 0이 아니다 ({keys[0].Value})";
+                reason = $"{label}: relative 채널의 첫 키 값이 중립값 {neutral}이 아니다 ({keys[0].Value})";
+                return false;
+            }
+
+            // restore는 마지막 키도 중립값이어야 한다 — 선언과 키가 어긋나면 끝에서 튀고, 리듀서의 무변과도 갈린다.
+            if (end == MotionEnd.Restore && Math.Abs(keys[keys.Length - 1].Value - neutral) > Tolerance)
+            {
+                reason = $"{label}: restore 모션의 마지막 키 값이 중립값 {neutral}이 아니다 ({keys[keys.Length - 1].Value}) — 남기려면 commit";
                 return false;
             }
 

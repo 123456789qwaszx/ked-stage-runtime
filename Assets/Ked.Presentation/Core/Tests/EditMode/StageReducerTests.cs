@@ -810,15 +810,15 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void motion은_채널마다_마지막_키를_접는다_offset은_더하고_absolute는_그_값이다()
+        public void motion은_채널마다_마지막_키를_접는다_relative는_더하고_absolute는_그_값이다()
         {
             MotionClip walkTilt = new()
             {
-                Name = "walk_tilt", Rig = "character", Duration = 0.5f,
+                Name = "walk_tilt", Rig = "character", Duration = 0.5f, End = MotionEnd.Commit,
                 Channels = new[]
                 {
-                    // 걷기: 배치 축을 지금 자리에서 +80 (offset) — 중간에 어디를 지나든 끝은 +80
-                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, MotionChannelMode.Offset, 0.5f, x: (0f, 80f)),
+                    // 걷기: 배치 축을 지금 자리에서 +80 (relative) — 중간에 어디를 지나든 끝은 +80
+                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, MotionChannelMode.Relative, 0.5f, x: (0f, 80f)),
                     // 기울기: 연기 축을 15도로 (absolute) — 시작값이 무엇이든 15
                     MotionChannelOf("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, MotionChannelMode.Absolute, 0.5f, z: (3f, 15f)),
                 },
@@ -831,7 +831,7 @@ namespace Ked.Presentation.Core.Tests
                 Cmd("left", "c1", "1u"),               // Track_X = -40
                 Cmd("char_rotate_to", "c1", "40"),     // SwayPivot z = 40
                 Cmd("motion", "c1", "walk_tilt"),
-                Cmd("motion", "c1", "walk_tilt"));     // 두 번 — offset은 누적, absolute는 그대로
+                Cmd("motion", "c1", "walk_tilt"));     // 두 번 — relative는 누적, absolute는 그대로
 
             Assert.That(state.Unhandled, Is.Empty);
             Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X, Is.EqualTo(-40f + 160f).Within(Eps));
@@ -839,13 +839,22 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void 순변위_0인_모션은_무변이다()
+        public void restore_모션은_무변이고_relative_배율은_곱셈이다()
         {
             MotionClip nod = new()
             {
-                Name = "nod", Rig = "character", Duration = 0.6f,
-                Channels = new[] { MotionChannelOf("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, MotionChannelMode.Offset, 0.6f, y: (0f, 0f)) },
+                Name = "nod", Rig = "character", Duration = 0.6f, End = MotionEnd.Restore,
+                Channels = new[] { MotionChannelOf("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, MotionChannelMode.Relative, 0.6f, y: (0f, 0f)) },
             };
+
+            MotionClip grow = new()
+            {
+                Name = "grow", Rig = "character", Duration = 0.4f, End = MotionEnd.Commit,
+                Channels = new[] { MotionChannelOf("CharSlot_Scale", MotionChannelKind.Scale, MotionChannelMode.Relative, 0.4f, x: (1f, 1.5f), y: (1f, 1.5f)) },
+            };
+
+            StageState scaled = Fold(TuningWithMotions(grow), Cmd("slot", "c1"), Cmd("scale_by", "c1", "2"), Cmd("motion", "c1", "grow"));
+            Assert.That(scaled.Nodes.GetState("c1/CharSlot_Scale").LocalScale.XY, Is.EqualTo(new Vec2(3f, 3f)), "2 × 1.5");
 
             StageState before = Fold(TuningWithMotions(nod), Cmd("slot", "c1"));
             StageState after = StageReducer.Apply(before, Cmd("motion", "c1", "nod"), TuningWithMotions(nod));
@@ -860,11 +869,11 @@ namespace Ked.Presentation.Core.Tests
         {
             MotionClip bad = new()
             {
-                Name = "bad", Rig = "character", Duration = 0.5f,
+                Name = "bad", Rig = "character", Duration = 0.5f, End = MotionEnd.Commit,
                 Channels = new[]
                 {
-                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, MotionChannelMode.Offset, 0.5f, x: (0f, 80f)),
-                    MotionChannelOf("NoSuchNode", MotionChannelKind.Position, MotionChannelMode.Offset, 0.5f, x: (0f, 80f)),
+                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, MotionChannelMode.Relative, 0.5f, x: (0f, 80f)),
+                    MotionChannelOf("NoSuchNode", MotionChannelKind.Position, MotionChannelMode.Relative, 0.5f, x: (0f, 80f)),
                 },
             };
 

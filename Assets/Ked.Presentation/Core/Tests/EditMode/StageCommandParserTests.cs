@@ -103,8 +103,8 @@ public class StageCommandParserTests
     [Test]
     public void motion은_저장소의_클립을_그대로_싣고_모르는_이름은_오류_후_아무것도_내지_않는다()
     {
-        const string json = @"{ ""schema"": ""motions/1"", ""motions"": [ { ""name"": ""nod"", ""rig"": ""character"", ""duration"": 0.6,
-            ""channels"": [ { ""node"": ""CharacterPortrait_Track_Move_Y"", ""kind"": ""position"", ""mode"": ""offset"",
+        const string json = @"{ ""schema"": ""motions/1"", ""motions"": [ { ""name"": ""nod"", ""rig"": ""character"", ""duration"": 0.6, ""end"": ""restore"",
+            ""channels"": [ { ""node"": ""CharacterPortrait_Track_Move_Y"", ""kind"": ""position"", ""mode"": ""relative"",
             ""y"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 0.6, ""v"": 0 } ] } ] } ] }";
 
         StageCommandParser parser = new(null, null, null, MotionLibrary.Parse(json, "test"));
