@@ -44,7 +44,7 @@
 | `node` | 리그 스키마의 노드 id | 스키마에 있어야 한다. `CharSlot_Track_Focus`는 **금지**(저작값이 아니라 해(解)다 — focus × ScreenPoint × 정착 체인에서 풀린다) |
 | `kind` | `position` \| `scale` \| `euler` | anchoredPosition(px) · localScale(배율) · localEulerAngles(도) |
 | `mode` | `relative` \| `absolute` | **필수, 기본값 없음** (§2) |
-| `x` `y` `z` | 성분별 키 | 생략 = 건드리지 않는다. `z`는 `euler`에만. 키 2개 이상, `t` 오름차순, 첫 키 `t=0`, 마지막 키 `t=duration` |
+| `x` `y` `z` | 성분별 키 | 생략 = 건드리지 않는다. `z`는 `euler`에만. 내보내기는 relative에서 전 구간 중립값인 성분을 싣지 않는다(뜻이 같다). absolute는 그대로. 키 2개 이상, `t` 오름차순, 첫 키 `t=0`, 마지막 키 `t=duration` |
 | 키 | `t` 초 · `v` 값 · `inTangent` · `outTangent` | Unity `Keyframe`과 같은 Hermite. 가중 탄젠트·무한 탄젠트 없음 |
 
 Transform 경로는 파일에 없다. 내보내기가 경로를 노드 id로 바꾸되, 부모 사슬이 `rig-schemas.json`과 마디마다 같아야 한다(접두사는 허용). 리그 내부 계층이 바뀌면 덤프를 다시 내고 모션도 다시 내보낸다 — 조용히 맞는 척하지 않는다.

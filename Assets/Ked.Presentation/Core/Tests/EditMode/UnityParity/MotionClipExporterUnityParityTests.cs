@@ -204,6 +204,35 @@ namespace Ked.Presentation.Core.Tests.UnityParity
         }
 
         [Test]
+        public void relative에서_전_구간_중립값인_성분은_빠지고_absolute는_남는다()
+        {
+            // 회전 z만 키잉해도 Unity는 x·y를 상수 0으로 함께 기록한다(세 성분 묶음).
+            AnimationClip clip = NewClip();
+            RectTransform node = _refs.CharacterPortrait_SwayPivot;
+            AnimationCurve flat = new(new Keyframe(0f, 0f), new Keyframe(0.4f, 0f));
+            AnimationCurve tilt = new(new Keyframe(0f, 0f), new Keyframe(0.4f, 8f));
+
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.x"), flat);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.y"), flat);
+            AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.z"), tilt);
+
+            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "bow_rel", "character", MotionEnd.Commit, (n, k) => MotionChannelMode.Relative, CharacterRig(), out MotionClip rel, out List<string> errors), string.Join("\n", errors));
+            Assert.IsFalse(rel.Channels[0].HasX, "relative 0→0은 무변 — 뺀다");
+            Assert.IsFalse(rel.Channels[0].HasY);
+            Assert.IsTrue(rel.Channels[0].HasZ);
+
+            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "bow_abs", "character", MotionEnd.Commit, AllAbsolute, CharacterRig(), out MotionClip abs, out errors), string.Join("\n", errors));
+            Assert.IsTrue(abs.Channels[0].HasX, "absolute 0→0은 \"0으로\"라는 뜻 — 남긴다");
+            Assert.IsTrue(abs.Channels[0].HasY);
+
+            // 전부 중립값이면 채널이 없는 것 — 거부.
+            AnimationClip still = NewClip();
+            AnimationUtility.SetEditorCurve(still, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.z"), flat);
+            Assert.IsFalse(MotionClipExporter.TryConvert(still, "still", "character", MotionEnd.Restore, (n, k) => MotionChannelMode.Relative, CharacterRig(), out _, out errors));
+            StringAssert.Contains("변화", string.Join("\n", errors));
+        }
+
+        [Test]
         public void 쓴_JSON을_로더가_같은_개수로_되읽는다()
         {
             AnimationClip clip = NewClip();

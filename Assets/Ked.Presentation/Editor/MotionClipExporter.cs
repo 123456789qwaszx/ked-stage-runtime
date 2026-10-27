@@ -221,6 +221,15 @@ public static class MotionClipExporter
                 order.Add(id);
             }
 
+            // Unity는 회전·위치·배율을 세 성분 묶음으로 기록해 한 축만 키잉해도 나머지가 상수로 따라온다.
+            // relative 채널에서 전 구간 중립값인 성분은 "아무 변화 없음"이라 빼도 뜻이 같다 — 파일에 싣지 않는다.
+            // absolute는 "이 값으로"라는 뜻이 있으므로 그대로 둔다.
+            if (channel.Mode == MotionChannelMode.Relative && IsConstant(keys, MotionMath.Neutral(kind)))
+            {
+                channels[id] = channel;
+                continue;
+            }
+
             switch (component)
             {
                 case 0: channel.X = keys; break;
@@ -233,6 +242,15 @@ public static class MotionClipExporter
 
         if (errors.Count > 0)
             return false;
+
+        // 성분이 전부 빠진 채널(relative인데 전 구간 중립값) — 채널 자체가 무변이라 싣지 않는다.
+        order.RemoveAll(id => !channels[id].HasX && !channels[id].HasY && !channels[id].HasZ);
+
+        if (order.Count == 0)
+        {
+            errors.Add($"{label}: 변화가 있는 채널이 없다 — relative 채널의 키가 전부 중립값이다");
+            return false;
+        }
 
         MotionClip converted = new()
         {
@@ -360,6 +378,17 @@ public static class MotionClipExporter
 
     private static bool SegmentMatches(string segment, string id)
         => segment == id || segment.EndsWith(id, StringComparison.Ordinal);
+
+    private static bool IsConstant(CurveKey[] keys, float value)
+    {
+        foreach (CurveKey k in keys)
+        {
+            if (Math.Abs(k.Value - value) > MotionRules.Tolerance || k.InTangent != 0f || k.OutTangent != 0f)
+                return false;
+        }
+
+        return true;
+    }
 
     private static bool TryConvertKeys(AnimationCurve curve, string label, List<string> errors, out CurveKey[] keys)
     {
