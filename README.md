@@ -22,6 +22,7 @@
 모션 툴은 **Unity Animation 창**이다. **Ked › Motion › Create Authoring Rig**로 스키마가 세운 리그를 씬에 놓고(손으로 만든 프리팹은 쓰지 않는다) 키잉하고 `MotionDefinition`(Create › Ked › Motion Definition)에 뜻(id·리그·end·mode)을 적은 뒤
 메뉴 **Ked › Motion › Export motions.json**으로 낸다. 대본은 `<<motion slot 이름>>`으로 이름만 쓴다.
 규약은 [docs/motion-contract.md](docs/motion-contract.md) — 파일 형식 · relative/absolute · 종료 정책(restore/commit) · 충돌 · 받는 속성.
+전용 저작 도구의 계획은 [docs/PLAN_motion-tool.md](docs/PLAN_motion-tool.md).
 
 ## 무엇을 모르나
 

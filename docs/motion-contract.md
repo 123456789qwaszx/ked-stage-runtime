@@ -98,3 +98,13 @@ Skip·스텝 경계에서는 즉시 종점(commit)이나 시작값(restore)으�
 
 무대는 `MotionLibrary.Parse(json, label, rigNodeIds)`만 둔다. 본문을 어디서 가져오는지(TextAsset · 경로)는 호스트가 정한다.
 빌드에서는 씬이 직접 참조하는 TextAsset이 가장 단순하다 — 재생 저장소의 `SampleBootstrap › 작가 자산`.
+
+## 7. 정규 직렬화
+
+생산자가 둘이다(Unity `MotionClipExporter` · 전용 툴). 같은 키에서 **같은 바이트**가 나와야 "무엇으로 만들었는지"가 파일에 남지 않는다.
+- 필드 순서: `schema` · `motions[]` → `name` · `rig` · `duration` · `end` · `channels[]` → `node` · `kind` · `mode` · `x` · `y` · `z` → 키 `t` · `v` · `inTangent` · `outTangent`
+- 수: invariant culture `"R"`. 정수는 `0`·`8`처럼(소수점 없이). 음수 0은 `0`
+- 들여쓰기 2칸, 한 키는 한 줄 안에 `{ "t": 0, "v": 0, "inTangent": 0, "outTangent": 0 }`, 성분 배열은 `[ … ]` 한 줄
+- UTF-8(BOM 없음) · LF · 파일 끝 개행 하나
+- 기준 구현은 `Editor/MotionClipExporter.ToJson`. 재생 저장소 `Samples/Dialogue/motions.json`이 견본이다
+
