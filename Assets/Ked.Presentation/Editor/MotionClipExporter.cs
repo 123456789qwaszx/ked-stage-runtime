@@ -176,7 +176,7 @@ public static class MotionClipExporter
     public static bool TryConvert(
         AnimationClip clip,
         string name,
-        string rig,
+        string rigId,
         MotionEnd end,
         Func<string, MotionChannelKind, MotionChannelMode> modeOf,
         RigNodeSet rig,
@@ -237,7 +237,7 @@ public static class MotionClipExporter
         MotionClip converted = new()
         {
             Name = name,
-            Rig = rig,
+            Rig = rigId,
             Duration = clip.length,
             End = end,
             Channels = new MotionChannel[order.Count],
