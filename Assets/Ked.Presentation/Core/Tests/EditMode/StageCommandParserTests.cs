@@ -99,4 +99,24 @@ public class StageCommandParserTests
         Assert.AreEqual(2, output.Count);
         Assert.IsInstanceOf<FadeInCommandSpecCharR>(output[1]);
     }
+
+    [Test]
+    public void motion은_저장소의_클립을_그대로_싣고_모르는_이름은_오류_후_아무것도_내지_않는다()
+    {
+        const string json = @"{ ""schema"": ""motions/1"", ""motions"": [ { ""name"": ""nod"", ""rig"": ""character"", ""duration"": 0.6,
+            ""channels"": [ { ""node"": ""CharacterPortrait_Track_Move_Y"", ""kind"": ""position"", ""mode"": ""offset"",
+            ""y"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 0.6, ""v"": 0 } ] } ] } ] }";
+
+        StageCommandParser parser = new(null, null, null, MotionLibrary.Parse(json, "test"));
+
+        List<CommandSpecBase> specs = Parse(parser, Cmd("motion", "c1", "nod"));
+        MotionCommandSpecCharR spec = (MotionCommandSpecCharR)specs[0];
+
+        Assert.AreEqual("c1", spec.slotKey);
+        Assert.AreEqual("nod", spec.clip.Name);
+        Assert.AreEqual(0.6f, spec.clip.Duration, 0f);
+
+        LogAssert.Expect(LogType.Error, new Regex("StageCommandParser.*Unknown motion"));
+        Assert.IsEmpty(Parse(parser, Cmd("motion", "c1", "nope")), "기본 모션은 없다 — 아무것도 내지 않는다");
+    }
 }

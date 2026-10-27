@@ -38,6 +38,12 @@ namespace Ked.Presentation.Core
 
         /// <summary>portrait-dimensions.json — 초상 사이징의 종횡비. 없으면 사이징은 Unhandled.</summary>
         public PortraitDimensionsFileDto PortraitDimensions;
+
+        /// <summary>
+        /// motions.json — 이름 → 클립(검증된 것만). motion 폴드가 채널마다 마지막 키를 클레임으로 접는다.
+        /// 없으면(null) motion 커맨드는 Unhandled — 재생이 모션을 읽었다면 폴드도 같은 파일을 받아야 한다.
+        /// </summary>
+        public IReadOnlyDictionary<string, MotionClip> Motions;
     }
 
     /// <summary>
@@ -54,7 +60,7 @@ namespace Ked.Presentation.Core
     /// 현재 어휘(v1): slot 계열(리그 스폰) · cast/actor(배역·별칭) ·
     ///   show(리셋+앵커+사이징+가시성) · fade_in/out · slide_in/out · place/size 계열 ·
     ///   nudge/move/scale/rotate 계열 · shot 5종 · char_to 계열 ·
-    ///   초상 축(pose/face/face_swap) · 시간 커맨드(pause·Nfr — 접을 것이 없다).
+    ///   초상 축(pose/face/face_swap) · motion(채널마다 마지막 키) · 시간 커맨드(pause·Nfr — 접을 것이 없다).
     /// 명시적 한계: 배경/오버레이/이펙트/오디오/트랜지션 리그, 대사창,
     ///   절차적 연기 커맨드(목표값이 정의되지 않음).
     ///
@@ -200,6 +206,9 @@ namespace Ked.Presentation.Core
                 // gesture — 제자리 몸짓. 순변위 0이라 접을 것이 없다(정지 프레임은 이미 옳다).
                 // 곡선·진폭을 읽지 않으므로 인자 자리에 의존하지 않는다.
                 case "gesture": return ApplyGesture(state, cmd, out reason);
+
+                // motion — 채널마다 마지막 키가 클레임이다. 샘플링하지 않는다(MotionMath.ClaimFor).
+                case "motion": return ApplyMotion(state, cmd, tuning, out reason);
 
                 // shot
                 case "shot_zoom":  return ApplyShotZoom(state, cmd, out reason);

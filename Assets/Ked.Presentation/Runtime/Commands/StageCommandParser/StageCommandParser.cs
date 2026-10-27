@@ -17,17 +17,20 @@ public sealed partial class StageCommandParser
     private readonly RectTransform _charRigPrefab;
     private readonly RectTransform _backgroundRigPrefab;
     private readonly EaseCurveLibrary _easeCurves;
+    private readonly MotionLibrary _motions;
 
     private List<CommandSpecBase> _output;
 
     public StageCommandParser(
         RectTransform charRigPrefab,
         RectTransform backgroundRigPrefab,
-        EaseCurveLibrary easeCurves = null)
+        EaseCurveLibrary easeCurves = null,
+        MotionLibrary motions = null)
     {
         _charRigPrefab = charRigPrefab;
         _backgroundRigPrefab = backgroundRigPrefab;
         _easeCurves = easeCurves ?? EaseCurveLibrary.Empty;
+        _motions = motions ?? MotionLibrary.Empty;
     }
 
     public static bool Knows(string commandName)

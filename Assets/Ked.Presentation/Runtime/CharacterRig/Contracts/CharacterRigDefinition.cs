@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -68,6 +69,9 @@ public static class CharacterRigSchema
 
         public float InitialCanvasGroupAlpha = 1f;
     }
+
+    /// <summary>스키마 노드 id 전부(순서 그대로). 모션 로더가 채널 노드를 이걸로 검증한다.</summary>
+    public static string[] NodeIds() => Array.ConvertAll(Nodes, n => n.Id.ToString());
 
     public static readonly NodeDef[] Nodes =
     {

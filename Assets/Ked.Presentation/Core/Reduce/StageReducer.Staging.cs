@@ -181,6 +181,59 @@ namespace Ked.Presentation.Core
         private static bool ApplyGesture(StageState state, in StageCommand cmd, out string reason)
             => TryGetSpawnedSlot(state, cmd, out _, out reason);
 
+        /// <summary>
+        /// motion(slot, name) — 채널마다 **마지막 키**를 그 노드의 클레임으로 접는다.
+        /// 종점이 평가 결과가 아니라 키 값이라 샘플링이 필요 없다 — "이징은 종점에 관여하지 않는다"가
+        /// 모션에서도 그대로 선다. offset 채널은 현재 상태 위에, absolute 채널은 그 값으로.
+        /// 순변위 0인 모션(몸짓)은 자연히 무변이 된다 — gesture와 같은 결과다.
+        ///
+        /// 재생(MotionCommandCharR.ClaimTarget)과 같은 함수(MotionMath.ClaimFor)를 지난다 —
+        /// 장부 게시·트윈 종점·상태 폴드가 같은 값을 본다.
+        /// </summary>
+        private static bool ApplyMotion(
+            StageState state, in StageCommand cmd, StageReducerTuning tuning, out string reason)
+        {
+            if (!TryGetSpawnedSlot(state, cmd, out string slotKey, out reason))
+                return false;
+
+            string name = cmd.Arg(1);
+
+            if (string.IsNullOrEmpty(name))
+            {
+                reason = "모션 이름이 없다";
+                return false;
+            }
+
+            if (tuning.Motions == null || !tuning.Motions.TryGetValue(name, out MotionClip clip))
+            {
+                reason = tuning.Motions == null
+                    ? $"모션 '{name}' — 튜닝에 motions.json이 없다"
+                    : $"모션 '{name}'을 모른다 (motions.json에 없거나 검증에서 걸렸다)";
+                return false;
+            }
+
+            // 채널이 가리키는 노드가 하나라도 없으면 통째로 거부한다 — 반만 접힌 모션은 거짓 정지 프레임이다.
+            for (int i = 0; i < clip.Channels.Length; i++)
+            {
+                if (!state.Nodes.Contains(StageState.NodeKeyOf(slotKey, clip.Channels[i].Node)))
+                {
+                    reason = $"모션 '{name}' 채널 {i}: 리그에 노드 '{clip.Channels[i].Node}'가 없다";
+                    return false;
+                }
+            }
+
+            for (int i = 0; i < clip.Channels.Length; i++)
+            {
+                ref readonly MotionChannel channel = ref clip.Channels[i];
+                string nodeKey = StageState.NodeKeyOf(slotKey, channel.Node);
+
+                Vec3 start = MotionMath.StartOf(channel, state.Nodes.GetState(nodeKey));
+                state.Apply(MotionMath.ClaimFor(channel, nodeKey, start));
+            }
+
+            return true;
+        }
+
         // char_rotate_to — 초상 축의 절대 회전(브리지: CharacterPortrait_SwayPivot).
         // rotate_by가 미는 CharSlot_SwayPivot과는 다른 노드다.
         private static bool ApplyPortraitRotateTo(StageState state, in StageCommand cmd, out string reason)

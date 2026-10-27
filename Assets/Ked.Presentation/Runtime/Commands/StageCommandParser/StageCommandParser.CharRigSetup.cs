@@ -199,6 +199,20 @@ public sealed partial class StageCommandParser
             yOscillation = ResolveOscillation(yEaseToken)
         });
 
+    // motion(slot, name) — motions.json의 클립을 그대로 싣는다. 길이는 클립이 안다.
+    // 모르는 이름은 소리 내고 아무것도 내지 않는다 — 대신 재생할 기본 모션이 없다(이징의 OutCubic과 다른 점).
+    private void EnqueueMotionSpec(string roleKey, string motionName)
+    {
+        if (!_motions.TryGet(motionName, out MotionClip clip))
+        {
+            Debug.LogError(
+                $"[StageCommandParser] Unknown motion '{motionName}' — {MotionLibrary.BundleFileName}에 없다. 이 커맨드는 재생하지 않는다.");
+            return;
+        }
+
+        Emit(new MotionCommandSpecCharR { slotKey = roleKey, clip = clip });
+    }
+
     // ── 회전 (3a75d4f6에서 지운 것을 되살린 자리) ──────────────────
     // 표적은 CharSlot_SwayPivot이다 — 코어 리듀서(ApplyRotateBy/ApplyRotateReset)가
     // 접는 노드와 같아야 "재생 = 정지 프레임"이 유지된다.

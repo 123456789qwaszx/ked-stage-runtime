@@ -789,5 +789,97 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X,
                 Is.EqualTo(-PixelsPerUnit).Within(Eps));
         }
+
+        // ── motion — 채널마다 마지막 키가 클레임 ─────────────────────
+
+        private static MotionChannel MotionChannelOf(
+            string node, MotionChannelKind kind, MotionChannelMode mode, float duration,
+            (float v0, float v1)? x = null, (float v0, float v1)? y = null, (float v0, float v1)? z = null)
+        {
+            CurveKey[] Keys((float v0, float v1)? c)
+                => c.HasValue ? new[] { new CurveKey(0f, c.Value.v0, 0f, 0f), new CurveKey(duration, c.Value.v1, 0f, 0f) } : null;
+
+            return new MotionChannel { Node = node, Kind = kind, Mode = mode, X = Keys(x), Y = Keys(y), Z = Keys(z) };
+        }
+
+        private static StageReducerTuning TuningWithMotions(params MotionClip[] clips)
+        {
+            StageReducerTuning tuning = NewTuning();
+            tuning.Motions = clips.ToDictionary(c => c.Name, c => c);
+            return tuning;
+        }
+
+        [Test]
+        public void motion은_채널마다_마지막_키를_접는다_offset은_더하고_absolute는_그_값이다()
+        {
+            MotionClip walkTilt = new()
+            {
+                Name = "walk_tilt", Rig = "character", Duration = 0.5f,
+                Channels = new[]
+                {
+                    // 걷기: 배치 축을 지금 자리에서 +80 (offset) — 중간에 어디를 지나든 끝은 +80
+                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, MotionChannelMode.Offset, 0.5f, x: (0f, 80f)),
+                    // 기울기: 연기 축을 15도로 (absolute) — 시작값이 무엇이든 15
+                    MotionChannelOf("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, MotionChannelMode.Absolute, 0.5f, z: (3f, 15f)),
+                },
+            };
+
+            StageReducerTuning tuning = TuningWithMotions(walkTilt);
+
+            StageState state = Fold(tuning,
+                Cmd("slot", "c1"),
+                Cmd("left", "c1", "1u"),               // Track_X = -40
+                Cmd("char_rotate_to", "c1", "40"),     // SwayPivot z = 40
+                Cmd("motion", "c1", "walk_tilt"),
+                Cmd("motion", "c1", "walk_tilt"));     // 두 번 — offset은 누적, absolute는 그대로
+
+            Assert.That(state.Unhandled, Is.Empty);
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X, Is.EqualTo(-40f + 160f).Within(Eps));
+            Assert.That(state.Nodes.GetState("c1/CharacterPortrait_SwayPivot").LocalEulerAngles.Z, Is.EqualTo(15f).Within(Eps));
+        }
+
+        [Test]
+        public void 순변위_0인_모션은_무변이다()
+        {
+            MotionClip nod = new()
+            {
+                Name = "nod", Rig = "character", Duration = 0.6f,
+                Channels = new[] { MotionChannelOf("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, MotionChannelMode.Offset, 0.6f, y: (0f, 0f)) },
+            };
+
+            StageState before = Fold(TuningWithMotions(nod), Cmd("slot", "c1"));
+            StageState after = StageReducer.Apply(before, Cmd("motion", "c1", "nod"), TuningWithMotions(nod));
+
+            Assert.That(after.Unhandled, Is.Empty);
+            Assert.That(after.Nodes.GetState("c1/CharacterPortrait_Track_Move_Y").AnchoredPosition,
+                Is.EqualTo(before.Nodes.GetState("c1/CharacterPortrait_Track_Move_Y").AnchoredPosition));
+        }
+
+        [Test]
+        public void 모르는_모션과_없는_노드는_Unhandled이고_반만_접지_않는다()
+        {
+            MotionClip bad = new()
+            {
+                Name = "bad", Rig = "character", Duration = 0.5f,
+                Channels = new[]
+                {
+                    MotionChannelOf("CharSlot_Track_X", MotionChannelKind.Position, MotionChannelMode.Offset, 0.5f, x: (0f, 80f)),
+                    MotionChannelOf("NoSuchNode", MotionChannelKind.Position, MotionChannelMode.Offset, 0.5f, x: (0f, 80f)),
+                },
+            };
+
+            StageState state = Fold(TuningWithMotions(bad),
+                Cmd("slot", "c1"),
+                Cmd("motion", "c1", "unknown"),
+                Cmd("motion", "c1", "bad"));
+
+            Assert.That(state.Unhandled.Count, Is.EqualTo(2));
+            StringAssert.Contains("모른다", state.Unhandled[0].Reason);
+            StringAssert.Contains("NoSuchNode", state.Unhandled[1].Reason);
+            Assert.That(state.Nodes.GetState("c1/CharSlot_Track_X").AnchoredPosition.X, Is.EqualTo(0f), "첫 채널만 접히면 안 된다");
+
+            StageState noTuning = Fold(NewTuning(), Cmd("slot", "c1"), Cmd("motion", "c1", "bad"));
+            StringAssert.Contains("motions.json", noTuning.Unhandled[0].Reason);
+        }
     }
 }
