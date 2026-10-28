@@ -44,7 +44,7 @@
 | `rig` | `rig-schemas.json`의 `rigKind` | 채널 노드를 이 리그로 검증한다. 지금은 `character`뿐 |
 | `duration` | 초 | `> 0`. 모든 채널의 모든 성분이 이 시각에 마지막 키를 둔다 |
 | `end` | 끝난 뒤 무엇이 남는가 | `restore` \| `commit`. **필수, 기본값 없음** (§3) |
-| `channels[]` | 노드 하나의 속성 하나 | 하나 이상. `(node, kind)`는 한 모션 안에서 유일 |
+| `channels[]` | 노드 하나의 속성 하나 | 비어도 된다(아무것도 하지 않고 길이만큼 흐르는 모션). `(node, kind)`는 한 모션 안에서 유일 |
 | `node` | 리그 스키마의 노드 id | 스키마에 있어야 한다. `CharSlot_Track_Focus`는 **금지**(저작값이 아니라 해(解)다 — focus × ScreenPoint × 정착 체인에서 풀린다) |
 | `kind` | `position` \| `scale` \| `euler` | anchoredPosition(px) · localScale(배율) · localEulerAngles(도) |
 | `x` `y` `z` | 성분별 키 | 생략 = 건드리지 않는다(어느 mode로 읽든). `z`는 `euler`에만. 키 2개 이상, `t` 오름차순, 첫 키 `t=0`, 마지막 키 `t=duration`. 값의 뜻은 §2 |
