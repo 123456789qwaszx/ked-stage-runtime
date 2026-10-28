@@ -8,7 +8,7 @@ namespace Ked.Presentation.Core.Tests
     ///
     /// 고정하는 규율:
     ///   · 배경 슬롯은 캐릭터 슬롯과 **같은 리그·같은 노드**로 선다.
-    ///   · bg_spawn은 세우고 바로 보인다(α 1). 캐릭터 slot은 fade_in 전까지 숨는다 — 둘의 유일한 차이.
+    ///   · bg_spawn은 캐릭터 slot처럼 숨은 채 선다(α 0) — bg_fade_in으로 들인다.
     ///   · 종횡비는 초상 DB가 아니라 배경 치수표(키 하나)에서 온다. 없으면 그 축만 Unhandled.
     ///   · 지운 어휘(bg_size·bg_place)는 Unhandled로 소리를 낸다 — 조용히 통과하지 않는다.
     /// 합성 리그는 StageReducerTests와 같은 부모 사슬이다.
@@ -126,7 +126,7 @@ namespace Ked.Presentation.Core.Tests
         // ── 스폰 ─────────────────────────────────────────────────────
 
         [Test]
-        public void bg_spawn은_캐릭터_리그를_far에_세우고_바로_보인다()
+        public void bg_spawn은_캐릭터_리그를_far에_숨긴_채_세운다()
         {
             StageState state = Fold(Cmd("bg_spawn", "bg_main", "class_day"));
 
@@ -138,21 +138,12 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(attachment.StageKey, Is.EqualTo("stage00"));
             Assert.That(attachment.LayerKey, Is.EqualTo("far"));
 
-            // 세우면 보인다 — 캐릭터 slot(α 0)과 다른 유일한 점.
-            Assert.That(state.GetAlpha("bg_main/CharacterPortraitSprite_Root"), Is.EqualTo(1f));
+            // 숨은 채 선다 — 캐릭터 slot과 같다. 대본은 bg_fade_in으로 들인다.
+            Assert.That(state.GetAlpha("bg_main/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
 
             // 폭 = 부모 높이 1080 × (1026/580).
             Assert.That(ImageWidthOf(state, "bg_main"), Is.EqualTo(1080f * 1026f / 580f).Within(Eps));
             Assert.That(state.Unhandled, Is.Empty);
-        }
-
-        [Test]
-        public void 캐릭터_slot은_여전히_숨은_채_선다()
-        {
-            // 회귀 가드: 배경이 "바로 보임"이 된 것이 캐릭터 slot에 번지지 않았다.
-            StageState state = Fold(Cmd("slot", "c1"));
-
-            Assert.That(state.GetAlpha("c1/CharacterPortraitSprite_Root"), Is.EqualTo(0f));
         }
 
         [Test]
@@ -211,8 +202,6 @@ namespace Ked.Presentation.Core.Tests
             StageState state = Fold(Cmd("bg_spawn", "bg_main", "missing_bg"));
 
             Assert.That(state.HasSlot("bg_main"), Is.True, "슬롯을 못 세웠다는 거짓말을 하지 않는다");
-            Assert.That(state.GetAlpha("bg_main/CharacterPortraitSprite_Root"), Is.EqualTo(1f),
-                "가시성도 접혔다");
             Assert.That(state.Unhandled.Count, Is.EqualTo(1));
             Assert.That(state.Unhandled[0].Reason, Does.Contain("배경 치수가 없다"));
             Assert.That(state.Unhandled[0].Reason, Does.Contain("missing_bg"));
@@ -319,7 +308,8 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.Nodes.GetState("bg0/CharSlot_Track").AnchoredPosition, Is.EqualTo(Vec2.Zero));
             Assert.That(state.Nodes.GetState("bg0/CharacterPortrait_ActingScale").LocalScale.XY, Is.EqualTo(Vec2.One));
             Assert.That(ImageWidthOf(state, "bg0"), Is.EqualTo(1920f).Within(Eps), "새 그림의 폭");
-            Assert.That(state.GetAlpha("bg0/CharacterPortraitSprite_Root"), Is.EqualTo(1f), "배경은 세우면 보인다");
+            Assert.That(state.GetAlpha("bg0/CharacterPortraitSprite_Root"), Is.EqualTo(0f),
+                "새 리그는 숨은 채 선다 — 다시 bg_fade_in으로 들인다");
             Assert.That(state.Unhandled, Is.Empty);
         }
 
@@ -332,6 +322,7 @@ namespace Ked.Presentation.Core.Tests
                 Cmd("slot", "s1"),
                 Cmd("cast", "s1", "tyrant"),
                 Cmd("bg_spawn", "s1", "class_day"),
+                Cmd("bg_fade_in", "s1"),
                 Cmd("fade_out", "tyrant"));
 
             Assert.That(state.TryGetCharacter("s1", out _), Is.False);

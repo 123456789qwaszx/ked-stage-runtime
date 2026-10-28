@@ -10,7 +10,7 @@ namespace Ked.Presentation.Core
     /// (초상 DB가 아니라 background-dimensions.json).
     ///
     /// 파서(StageCommandParser.Background)와의 대응(PLAN_background-as-slot "명령 대응표"):
-    ///   bg_spawn / bg_slotNN → SetupCharRig(far, 배경) + 스프라이트 + FadeIn 0초 → 여기: 배역 풀기 + SpawnSlot + 사이징 + alpha 1
+    ///   bg_spawn / bg_slotNN → SetupCharRig(far, 배경) + 스프라이트            → 여기: SpawnSlot + 배역 풀기 + 사이징 (숨은 채)
     ///   bg_sprite            → 스프라이트 키 Spec(HeightFit)                 → 사이징
     ///   bg_fade_in/out       → FadeIn/Out(CharacterPortraitSprite_Root)       → ApplyFade (디스패치에서 직접)
     ///   bg_move              → MoveBy(CharSlot_Track)                         → ApplyMoveBy (디스패치에서 직접)
@@ -21,9 +21,9 @@ namespace Ked.Presentation.Core
         /// <summary>
         /// bg_spawn / bg_slotNN (rigKey, spriteKey[, layer]).
         ///
-        /// 세 가지를 한 번에 한다 — 슬롯을 세우고, 스프라이트 크기를 맞추고, **바로 보이게** 한다.
-        /// 마지막이 캐릭터 slot과 다른 점이다: 캐릭터는 fade_in 전까지 숨어 있지만(스프라이트 루트 α 0),
-        /// 배경은 세우면 보인다(옛 배경 리그의 루트 α가 1이었고, 그 대본 호환을 지킨다 — D7).
+        /// 슬롯을 세우고 스프라이트 크기를 맞춘다. **숨은 채 선다**(스프라이트 루트 α 0) — 캐릭터 slot과 같다.
+        /// 대본은 bg_fade_in으로 들인다. 옛 배경 리그는 세우면 바로 보여서, 대본마다 뒤에 쓴 bg_fade_in 24fr이
+        /// 한 번도 보이지 않았다 — 리그를 합치면서 작가가 쓴 대로 동작하게 했다(PLAN D7).
         ///
         /// 사이징이 실패해도 슬롯은 섰다 — 커맨드 전체를 Unhandled로 돌리면 "슬롯을 못 세웠다"는
         /// 거짓말이 된다. cast와 같은 규율로 못 접은 축만 기록한다.
@@ -47,9 +47,6 @@ namespace Ked.Presentation.Core
 
             if (!ApplyBackgroundSizing(state, slotKey, cmd.Arg(1), tuning, out string sizingReason))
                 state.AddUnhandled(cmd, sizingReason);
-
-            state.Apply(FadeInReduction.Reduce(
-                StageState.NodeKeyOf(slotKey, PortraitSizingStageReduction.ParentNodeId)));
 
             return true;
         }

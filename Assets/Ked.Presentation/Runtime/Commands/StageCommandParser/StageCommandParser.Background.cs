@@ -8,8 +8,8 @@ using UnityEngine;
 /// 대본·문서·외부 도구는 그대로이고, "이건 배경"이라는 저작 의도가 대본에 남는다.
 /// 코어 `StageReducer.Background.cs`가 같은 대응으로 접는다. 표적 노드를 바꾸면 거기도 함께 바꾼다.
 ///
-///   bg_spawn / bg_slotNN  →  SetupCharRig(far, asBackground) + SetSprite(키) + FadeIn 0초
-///                            (세우면 바로 보인다 — 옛 배경 리그 호환. 배역 있는 슬롯을 덮으면 배역을 푼다)
+///   bg_spawn / bg_slotNN  →  SetupCharRig(far, asBackground) + SetSprite(키)
+///                            (캐릭터 slot처럼 숨은 채 선다 — bg_fade_in으로 들인다. 배역 있는 슬롯을 덮으면 배역을 푼다)
 ///   bg_sprite             →  SetSprite(키), HeightFitPreserveAspect, 레이캐스트 끔
 ///   bg_fade_in / out      →  FadeIn/Out  → CharacterPortraitSprite_Root
 ///   bg_move               →  MoveBy      → CharSlot_Track            (move_by와 같은 축)
@@ -55,15 +55,9 @@ public sealed partial class StageCommandParser
             asBackground = true
         });
 
+        // 숨은 채 선다(스프라이트 루트 α 0) — 캐릭터 slot과 같다. 대본은 bg_fade_in으로 들인다.
+        // (옛 배경 리그는 세우면 바로 보여서, 대본마다 뒤에 쓴 bg_fade_in 24fr이 한 번도 보이지 않았다.)
         EnqueueSetBackgroundSpriteSpec(rigKey, spriteKey);
-
-        // 캐릭터 슬롯은 fade_in 전까지 숨어 있다(스프라이트 루트 α 0). 배경은 세우면 보인다.
-        Emit(new FadeInCommandSpecCharR
-        {
-            slotKey = rigKey,
-            target = CharacterRigTarget.CharacterPortraitSprite_Root,
-            duration = 0f
-        });
     }
 
     private void EnqueueSetBackgroundSpriteSpec(string rigKey, string spriteKey)

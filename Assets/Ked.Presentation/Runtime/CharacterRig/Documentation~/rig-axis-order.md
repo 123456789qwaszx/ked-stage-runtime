@@ -102,8 +102,7 @@ far 레이어에 이미지 한 장을 높이 맞춤으로 깔고·갈아 끼우�
 | `bg_scale` | `CharacterPortrait_ActingScale` — 가운데 피벗. `CharSlot_Scale`은 발 피벗이라 배경이 아래 가운데에서 커진다 |
 | `bg_sprite` | `CharacterPortraitSprite_Image` — 종횡비는 초상 DB가 아니라 `background-dimensions.json`, 레이캐스트는 끈다 |
 
-캐릭터와 다른 점은 셋이다.
-- 세우면 바로 보인다(`bg_spawn`이 스프라이트 루트 α를 1로 스냅).
+캐릭터와 다른 점은 둘이다(세우는 방식은 같다 — 숨은 채 서고 `bg_fade_in`으로 들인다).
 - 배역이 없다 — 그래서 배역 기반 축(`focus_on`)이 배경을 건너뛴다. 배경이 배역 있는 슬롯을 덮으면 배역을 풀고 경고한다.
 - 이미지가 클릭을 받지 않는다(화면 전체를 덮으므로).
 

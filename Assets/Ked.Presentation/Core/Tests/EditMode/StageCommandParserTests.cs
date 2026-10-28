@@ -132,11 +132,11 @@ public class StageCommandParserTests
     // 코어 StageReducer.Background와 같은 노드·같은 값이어야 등가성 하네스가 맞는다.
 
     [Test]
-    public void bg_spawn은_far에_배경으로_세우고_그림을_넣고_바로_보이게_한다()
+    public void bg_spawn은_far에_배경으로_세우고_그림을_넣는다_보이게는_bg_fade_in이()
     {
         List<CommandSpecBase> specs = Parse(NewParser(), Cmd("bg_spawn", "bg_main", "class_day"));
 
-        Assert.AreEqual(3, specs.Count);
+        Assert.AreEqual(2, specs.Count, "캐릭터 slot처럼 숨은 채 선다 — 가시성 스펙은 없다");
 
         SetupCharRigCommandSpec setup = (SetupCharRigCommandSpec)specs[0];
         Assert.AreEqual("bg_main", setup.roleKey);
@@ -151,10 +151,6 @@ public class StageCommandParserTests
         Assert.AreEqual("class_day", sprite.spriteKey);
         Assert.AreEqual(CharRigImageSizingMode.HeightFitPreserveAspect, sprite.sizingMode);
         Assert.IsFalse(sprite.raycastTarget, "화면 전체를 덮는 그림은 클릭을 받지 않는다");
-
-        FadeInCommandSpecCharR show = (FadeInCommandSpecCharR)specs[2];
-        Assert.AreEqual(CharacterRigTarget.CharacterPortraitSprite_Root, show.target);
-        Assert.AreEqual(0f, show.duration, "세우면 바로 보인다 — 옛 배경 리그 호환");
     }
 
     [Test]
