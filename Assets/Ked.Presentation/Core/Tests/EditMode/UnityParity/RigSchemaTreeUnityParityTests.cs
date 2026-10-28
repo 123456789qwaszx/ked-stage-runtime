@@ -107,15 +107,6 @@ namespace Ked.Presentation.Core.Tests.UnityParity
                     return root;
                 }
 
-                case "background":
-                {
-                    BackgroundRigBuilder builder = new();
-                    RectTransform root = builder.BuildBackgroundRigRoot(prefab);
-                    root.SetParent(stage, false);
-                    builder.BindRefsFromRoot(root, "", out _);
-                    return root;
-                }
-
                 case "screenEffect":
                 {
                     ScreenEffectRigBuilder builder = new();
@@ -163,8 +154,8 @@ namespace Ked.Presentation.Core.Tests.UnityParity
 
         // ── 대조 ─────────────────────────────────────────────────────
 
+        // 배경은 캐스팅하지 않은 캐릭터 슬롯이라 리그 종류는 둘이다.
         [TestCase("character")]
-        [TestCase("background")]
         [TestCase("screenEffect")]
         public void 덤프로_세운_트리가_실제_리그와_같다(string rigKind)
         {
@@ -187,7 +178,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
 
             // 1패스: 덤프의 논리 키 → 실제 rect.
             // __root는 익스포터가 붙인 논리 키이지 오브젝트 이름이 아니다
-            // (실제 이름은 CharacterRig / BackgroundRig / …). 리그 루트 자신을 가리킨다.
+            // (실제 이름은 CharacterRig / ScreenEffectRig). 리그 루트 자신을 가리킨다.
             Dictionary<string, RectTransform> liveByKey = new();
 
             foreach (RigSchemaNodeDto node in rig.nodes)

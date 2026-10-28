@@ -3,7 +3,7 @@ using Ked.Presentation.Core;
 using UnityEngine;
 
 /// <summary>
-/// 슬라이드(등장·퇴장)의 공통 수명 — SlideIn/SlideOut의 Char/Bg 4종이 이것 하나다.
+/// 슬라이드(등장·퇴장)의 공통 수명 — SlideIn/SlideOut이 이것 하나다(만들 때는 Char/Bg 4종이었다. 배경 쪽 둘은 2026-08에 지웠다).
 ///
 /// 네 커맨드의 본체는 원래 글자 단위로 같았고, 다른 건 다섯 가지뿐이었다:
 ///   대상 해석(리그 종류) · 방향/거리 · ease · punch · 튐이 앞에 오나 뒤에 오나.

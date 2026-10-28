@@ -18,6 +18,7 @@ public class StageCommandParserTests
         return output;
     }
 
+    // (리그 프리팹, 이징 곡선). 배경 리그 프리팹 자리는 2026-10-29에 없어졌다 — 배경도 캐릭터 리그다.
     private static StageCommandParser NewParser() => new(null, null);
 
     [Test]
@@ -107,7 +108,7 @@ public class StageCommandParserTests
             ""channels"": [ { ""node"": ""CharacterPortrait_Track_Move_Y"", ""kind"": ""position"",
             ""y"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 0.6, ""v"": 0 } ] } ] } ] }";
 
-        StageCommandParser parser = new(null, null, null, MotionLibrary.Parse(json, "test"));
+        StageCommandParser parser = new(null, null, MotionLibrary.Parse(json, "test"));
 
         List<CommandSpecBase> specs = Parse(parser, Cmd("motion", "c1", "nod"));
         MotionCommandSpecCharR spec = (MotionCommandSpecCharR)specs[0];
@@ -125,5 +126,75 @@ public class StageCommandParserTests
 
         LogAssert.Expect(LogType.Error, new Regex("StageCommandParser.*mode"));
         Assert.IsEmpty(Parse(parser, Cmd("motion", "c1", "nod", "offset")), "모르는 mode 낱말은 재생하지 않는다");
+    }
+
+    // ── 배경 = 캐스팅하지 않은 캐릭터 슬롯 ─────────────────────────────
+    // 코어 StageReducer.Background와 같은 노드·같은 값이어야 등가성 하네스가 맞는다.
+
+    [Test]
+    public void bg_spawn은_far에_배경으로_세우고_그림을_넣고_바로_보이게_한다()
+    {
+        List<CommandSpecBase> specs = Parse(NewParser(), Cmd("bg_spawn", "bg_main", "class_day"));
+
+        Assert.AreEqual(3, specs.Count);
+
+        SetupCharRigCommandSpec setup = (SetupCharRigCommandSpec)specs[0];
+        Assert.AreEqual("bg_main", setup.roleKey);
+        Assert.AreEqual(PresentationStageKey.Stage00, setup.stage);
+        Assert.AreEqual(PresentationDepthLayerKey.Far, setup.layer);
+        Assert.IsTrue(setup.asBackground, "배역 있는 슬롯을 덮으면 배역을 푸는 경로");
+
+        SetSpriteCommandSpecCharR sprite = (SetSpriteCommandSpecCharR)specs[1];
+        Assert.AreEqual("bg_main", sprite.slotKey);
+        Assert.AreEqual(CharacterRigTarget.CharacterPortraitSprite_Image, sprite.target);
+        Assert.AreEqual(ResourcesSpriteResolver.BackgroundsRoot, sprite.resourcesRoot);
+        Assert.AreEqual("class_day", sprite.spriteKey);
+        Assert.AreEqual(CharRigImageSizingMode.HeightFitPreserveAspect, sprite.sizingMode);
+        Assert.IsFalse(sprite.raycastTarget, "화면 전체를 덮는 그림은 클릭을 받지 않는다");
+
+        FadeInCommandSpecCharR show = (FadeInCommandSpecCharR)specs[2];
+        Assert.AreEqual(CharacterRigTarget.CharacterPortraitSprite_Root, show.target);
+        Assert.AreEqual(0f, show.duration, "세우면 바로 보인다 — 옛 배경 리그 호환");
+    }
+
+    [Test]
+    public void bg_slotNN은_스테이지를_접미사로_레이어를_셋째_인자로()
+    {
+        SetupCharRigCommandSpec a = (SetupCharRigCommandSpec)Parse(NewParser(), Cmd("bg_slot01", "bg_a", "class_day"))[0];
+        Assert.AreEqual(PresentationStageKey.Stage01, a.stage);
+        Assert.AreEqual(PresentationDepthLayerKey.Far, a.layer, "레이어 생략값은 far");
+
+        SetupCharRigCommandSpec b = (SetupCharRigCommandSpec)Parse(NewParser(), Cmd("bg_slot02", "bg_b", "class_day", "mid"))[0];
+        Assert.AreEqual(PresentationStageKey.Stage02, b.stage);
+        Assert.AreEqual(PresentationDepthLayerKey.Mid, b.layer);
+    }
+
+    [Test]
+    public void bg_fade_move_scale은_캐릭터와_같은_노드를_잡는다()
+    {
+        FadeOutCommandSpecCharR fade = (FadeOutCommandSpecCharR)Parse(NewParser(), Cmd("bg_fade_out", "bg_main"))[0];
+        Assert.AreEqual(CharacterRigTarget.CharacterPortraitSprite_Root, fade.target);
+        Assert.AreEqual(10f / 24f, fade.duration, 1e-5f, "생략값 10fr");
+
+        MoveByCommandSpecCharR move = (MoveByCommandSpecCharR)Parse(NewParser(), Cmd("bg_move", "bg_main", "2u", "-1u"))[0];
+        Assert.AreEqual(CharacterRigTarget.CharSlot_Track, move.target, "move_by와 같은 축");
+        Assert.IsFalse(move.useAbsolutePosition);
+        Assert.Less(move.delta.y, 0f, "부호 있는 단위");
+
+        ScaleToCommandSpecCharR scale = (ScaleToCommandSpecCharR)Parse(NewParser(), Cmd("bg_scale", "bg_main", "1.2"))[0];
+        Assert.AreEqual(CharacterRigTarget.CharacterPortrait_ActingScale, scale.target, "가운데 피벗 — CharSlot_Scale은 발 피벗");
+        Assert.IsFalse(scale.relativeToCurrent);
+        Assert.AreEqual(1.2f, scale.toScale.x, 1e-6f);
+    }
+
+    [Test]
+    public void 지운_bg_size와_bg_place는_모른다()
+    {
+        Assert.IsFalse(StageCommandParser.Knows("bg_size"));
+        Assert.IsFalse(StageCommandParser.Knows("bg_place"));
+
+        SetSpriteCommandSpecCharR sprite = (SetSpriteCommandSpecCharR)Parse(
+            NewParser(), Cmd("bg_sprite", "bg_main", "studio_evening", "back"))[0];
+        Assert.AreEqual("studio_evening", sprite.spriteKey, "셋째 인자는 더 읽지 않는다");
     }
 }

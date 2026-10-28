@@ -52,8 +52,8 @@
 > **v2는 제거됐다.** `Runtime/ScreenEffect/StageDepthBlur/` 12파일과 `UISeperableBlur.shader`,
 > 그리고 `PresentationUIRoot`의 FrostedGlass 오버레이 배선이 전부 빠졌다.
 > `IStageDepthContentSlotProvider`만 살아남아 `Runtime/PresentationCore/`로 옮겼다 —
-> 이건 블러가 아니라 무대/레이어 슬롯 조회라 두 리그(`BackgroundRigSlotResolver`,
-> `CharRigSlotResolver`)가 계속 쓴다.
+> 이건 블러가 아니라 무대/레이어 슬롯 조회라 리그 슬롯 해석기(`CharRigSlotResolver`)가 계속 쓴다.
+> (당시에는 배경 리그의 해석기도 썼다 — 배경 리그는 2026-10-29에 캐릭터 슬롯으로 합쳐졌다.)
 
 ### 같은 이유로 배제한 것 — Dual Filter / Dual Kawase
 
@@ -76,9 +76,11 @@ Bjørge, *Bandwidth-Efficient Rendering*, SIGGRAPH 2015 Mobile Graphics (ARM).
 - 배경은 **텍스처 한 장**이라 밉 기반이 특히 잘 맞는다
 - `CharacterBlur.hlsl`을 그대로 물리면 되므로 **에셋 0장, 새 코드 0줄**이다
 
-그래서 배경도 요소별 셰이더 블러로 간다. `BackgroundRigRefs.VisualEffect`가
-캐릭터와 같은 `RigVisualEffectController`를 쓴다 — 머티리얼 인스턴스화와
-`materialForRendering` 처리는 버그가 잦은 자리라 복제하지 않고 공유했다.
+그래서 배경도 요소별 셰이더 블러로 간다. 당시에는 별도 배경 리그의 `VisualEffect`가
+캐릭터와 같은 `RigVisualEffectController`를 공유했다 — 머티리얼 인스턴스화와
+`materialForRendering` 처리는 버그가 잦은 자리라 복제하지 않았다. 2026-10-29부터는 배경이
+**캐릭터 리그 그 자체**(캐스팅하지 않은 슬롯)라 공유할 것도 없다 — 같은 컨트롤러 하나다
+(재생 저장소 `docs/PLAN_background-as-slot.md`). `focus_on`은 배역 있는 슬롯만 보므로 배경은 여전히 대상이 아니다.
 
 `screen_blur <layer> <amount>`의 의미("그 레이어에 있는 것을 흐린다")는 그대로 두고
 기구만 바꿨다(`StageLayerBlurCommand`). far 레이어에는 배경만 있으므로 기존 저작이

@@ -14,8 +14,8 @@ using UnityEngine;
 /// </summary>
 public sealed partial class StageCommandParser
 {
+    // 배경(bg_*)도 이 리그로 선다 — 캐스팅하지 않은 슬롯.
     private readonly RectTransform _charRigPrefab;
-    private readonly RectTransform _backgroundRigPrefab;
     private readonly EaseCurveLibrary _easeCurves;
     private readonly MotionLibrary _motions;
 
@@ -23,12 +23,10 @@ public sealed partial class StageCommandParser
 
     public StageCommandParser(
         RectTransform charRigPrefab,
-        RectTransform backgroundRigPrefab,
         EaseCurveLibrary easeCurves = null,
         MotionLibrary motions = null)
     {
         _charRigPrefab = charRigPrefab;
-        _backgroundRigPrefab = backgroundRigPrefab;
         _easeCurves = easeCurves ?? EaseCurveLibrary.Empty;
         _motions = motions ?? MotionLibrary.Empty;
     }
@@ -76,5 +74,24 @@ public sealed partial class StageCommandParser
             $"[StageCommandParser] <<{c.Name}>> 인자 {index}가 숫자가 아니다 ('{token}'). {fallback}으로 간다.");
 
         return fallback;
+    }
+
+    // 부호 있는 단위 토큰("-2u", "+0.5u"). 캐릭터·샷·배경 핸들러가 함께 쓴다.
+    private static float ParseSignedUnit(
+        string token,
+        float fallbackUnits = 0f)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return YarnUnitParser.Parse(token, fallbackUnits);
+
+        string trimmed = token.Trim();
+
+        if (trimmed.StartsWith("-", System.StringComparison.Ordinal))
+            return -YarnUnitParser.Parse(trimmed[1..], Mathf.Abs(fallbackUnits));
+
+        if (trimmed.StartsWith("+", System.StringComparison.Ordinal))
+            return YarnUnitParser.Parse(trimmed[1..], Mathf.Abs(fallbackUnits));
+
+        return YarnUnitParser.Parse(trimmed, fallbackUnits);
     }
 }

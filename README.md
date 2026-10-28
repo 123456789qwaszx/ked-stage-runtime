@@ -10,7 +10,7 @@
 | 어셈블리 | 자리 | 무엇 |
 |---|---|---|
 | `Ked.Presentation.Core` | `Assets/Ked.Presentation/Core/` | 순수 C#(엔진 의존 0) — 정지 프레임 리듀서 · 장부 · 클레임 · shot 의도 · 이징·커브·진동 · 튜닝 DTO · `StageCommand`. 저작 도구(VnTool)가 그대로 반입한다 |
-| `Ked.Presentation.Runtime` | `Assets/Ked.Presentation/Runtime/` | Unity 실행 계층 — `Stage`(무대 상태) · `Commands`(커맨드 · 팩토리 · **`StageCommandParser`**) · `CharacterRig` · `ShotResponse` · `BackgroundRig` · `ScreenEffect` · `StageMask` · `Audio`. 경계의 근거는 [`Runtime/ASSEMBLY-BOUNDARY.md`](Assets/Ked.Presentation/Runtime/ASSEMBLY-BOUNDARY.md) |
+| `Ked.Presentation.Runtime` | `Assets/Ked.Presentation/Runtime/` | Unity 실행 계층 — `Stage`(무대 상태) · `Commands`(커맨드 · 팩토리 · **`StageCommandParser`**) · `CharacterRig`(배경도 이 리그 — 캐스팅하지 않은 슬롯) · `ShotResponse` · `ScreenEffect` · `StageMask` · `Audio`. 경계의 근거는 [`Runtime/ASSEMBLY-BOUNDARY.md`](Assets/Ked.Presentation/Runtime/ASSEMBLY-BOUNDARY.md) |
 | `Ked.Presentation.Editor` | `Assets/Ked.Presentation/Editor/` | 초상 DB 빌더 · 튜닝 덤프 익스포터 · 이징 골든 |
 | `Ked.Presentation.Core.Tests` | `Assets/Ked.Presentation/Core/Tests/EditMode/` | EditMode 테스트 — 리듀서 · 이징/커브 등가 · 파서 · Unity 대조 |
 | `Ked.CommandExecutor` | `Assets/Ked.CommandExecutor/` | **반입본**(원본 ked-command-executor, [vendoring.md](Assets/Ked.CommandExecutor/Documentation~/vendoring.md)) |

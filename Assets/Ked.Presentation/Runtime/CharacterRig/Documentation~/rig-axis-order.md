@@ -80,8 +80,37 @@
 ### 1.3 스키마 방식이 다른 리그로 퍼졌다
 
 계약이 좋으면 전파된다. `821f1e2b`(2026-06-24)에서 **화면 효과 리그도 같은 모양으로 갈렸다**
-(`refactor: screen effects를 schema기반 rig로 분리`). 지금은 네 리그가 전부 같은 네 이름을
-쓴다 — `Definition` · `Builder` · `Registry` · `Resolver`.
+(`refactor: screen effects를 schema기반 rig로 분리`). 한때 네 리그가 전부 같은 네 이름을
+썼다 — `Definition` · `Builder` · `Registry` · `Resolver`. 지금은 둘(캐릭터 · 화면 효과)이다 — 아래 1.5.
+
+### 1.5 그리고 배경 리그가 돌아왔다 — 2026-10-29
+
+같은 계약이 **거꾸로도** 작동했다. 배경 리그(2026-05-21 `f8fca379`)는 캐릭터 리그를 본떠 만든
+쌍둥이였고, 둘이 달라야 했던 이유는 06-09의 컷인 창(마스크 안에 배경과 캐릭터를 함께 넣고 창째
+움직이는 연출)이었다. 그 기능이 08-18 `3a75d4f6`에서 지워진 뒤 남은 배경 리그의 일은
+far 레이어에 이미지 한 장을 높이 맞춤으로 깔고·갈아 끼우고·페이드하는 것 — 전부 이 리그로 된다.
+
+그래서 **배경은 캐스팅하지 않은 캐릭터 슬롯**이 됐다. 하이어라키에 `bg_main_CharacterPortraitSprite_Image`가
+보이는 것은 그 결과이고, 이름을 `StageRig`류로 바꾸지 않은 것은 노드 이름이 3자 이름 동등성(§0)과
+튜닝 덤프에 걸려 있기 때문이다. 대본 어휘 `bg_*`는 남았다 — 파서(`StageCommandParser.Background.cs`)와
+코어(`StageReducer.Background.cs`)가 이 리그의 같은 노드로 펼친다:
+
+| 대본 | 노드 |
+|---|---|
+| `bg_fade_in/out` | `CharacterPortraitSprite_Root` (α) |
+| `bg_move` | `CharSlot_Track` — `move_by`와 같은 축 |
+| `bg_scale` | `CharacterPortrait_ActingScale` — 가운데 피벗. `CharSlot_Scale`은 발 피벗이라 배경이 아래 가운데에서 커진다 |
+| `bg_sprite` | `CharacterPortraitSprite_Image` — 종횡비는 초상 DB가 아니라 `background-dimensions.json`, 레이캐스트는 끈다 |
+
+캐릭터와 다른 점은 셋이다.
+- 세우면 바로 보인다(`bg_spawn`이 스프라이트 루트 α를 1로 스냅).
+- 배역이 없다 — 그래서 배역 기반 축(`focus_on`)이 배경을 건너뛴다. 배경이 배역 있는 슬롯을 덮으면 배역을 풀고 경고한다.
+- 이미지가 클릭을 받지 않는다(화면 전체를 덮으므로).
+
+재선언(같은 키로 다시 세우기)은 캐릭터와 같다: 새 리그를 세우고 옛 리그를 부순다. 배경 교체가 매번 이 경로를 타는데,
+코어는 그동안 "재사용한다"로 접고 있었다 — 같은 날 바로잡았다.
+복제본이 덜 돌봐져 `bg_place`가 넉 달째 깨져 있었던 것이 "두 곳에 있으면 갈린다"의 실제 사례였다.
+전말은 재생 저장소의 `docs/PLAN_background-as-slot.md`.
 
 ### 1.4 그리고 계층이 데이터가 됐다 — 2026-08-08
 

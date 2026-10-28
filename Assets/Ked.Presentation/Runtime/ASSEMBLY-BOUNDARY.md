@@ -21,7 +21,7 @@
 |---|---|---|
 | `Ked.CommandExecutor` | `Assets/Ked.CommandExecutor/` | **실행기** — 커맨드 수명(`CommandBase` · `ClaimTweenCommandBase`) · `CommandRunScope` · `CommandExecutor` · `SequencePlayer` · 포트 (참조: DOTween.Modules. **무대·재생·Yarn을 모른다**) |
 | `Ked.Presentation.Core` | `Assets/Ked.Presentation/Core/` | 순수 상태 계산 — 정지 프레임 리듀스·이징·튜닝 (**엔진 의존 0**, 참조 0) |
-| `Ked.Presentation.Runtime` | `Assets/Ked.Presentation/Runtime/` | **무대** 실행 계층 — Stage(무대 상태·무대 키·깊이 칸 계약) · Commands(커맨드 · 팩토리 · 토큰 파서 · **StageCommandParser**) · CharacterRig · ShotResponse · BackgroundRig · ScreenEffect · StageMask · Audio (참조: Core · CommandExecutor · DOTween.Modules) |
+| `Ked.Presentation.Runtime` | `Assets/Ked.Presentation/Runtime/` | **무대** 실행 계층 — Stage(무대 상태·무대 키·깊이 칸 계약) · Commands(커맨드 · 팩토리 · 토큰 파서 · **StageCommandParser**) · CharacterRig(배경 = 캐스팅하지 않은 슬롯) · ShotResponse · ScreenEffect · StageMask · Audio (참조: Core · CommandExecutor · DOTween.Modules) |
 | `Ked.Presentation.Playback` | `Assets/Ked.Presentation/Playback/` | 대사 재생 루프와 연출 기억 — 줄 진행·선택지(DialoguePresenter) · 재생 제어·롤백 기록·백로그·VN 재생 상태(FeatureController) · Yarn 등록·전달(YarnBridge) · 재생 호스트 계약·재생 단위(Host) · 연출 기억과 그 입구 `PlaybackMemory`(Memory) · 등가성 하네스(Diagnostics) (참조: Core · Runtime · CommandExecutor · YarnSpinner.Unity · TextMeshPro · UnityEngine.UI · DOTween.Modules) |
 | `Ked.Progression` · `Ked.Progression.Save` | `Assets/Ked.Progression/` | 진행 판정 코어와 진행 저장 (**엔진 의존 0**. 원본은 형제 저장소 `ked-progression-runtime`, [vendoring.md](../../Ked.Progression/Documentation~/vendoring.md)) |
 | `Ked.Presentation.Editor` (에디터 전용) | `Assets/Ked.Presentation/Editor/` | 무대 에디터 도구 — 초상 DB 빌더 · 튜닝 덤프 익스포터 · 이징 골든 (참조: Core · Runtime · CommandExecutor · UnityEngine.UI · DOTween.Modules) |
@@ -64,6 +64,7 @@ Ked.Presentation.Editor (에디터 전용) ────────────�
 그래서 `Runtime/` 부모 폴더를 만들어 모았다. 폴더를 나누고 싶으면 먼저 폴더 간 순환을 없애야 한다.
 
 > 2026-10-27 대조: 한때 적혀 있던 `ScreenEffect ↔ CharacterRig`·`ScreenEffect ↔ BackgroundRig` 순환은 지금 **0건**이다.
+> (BackgroundRig 폴더는 2026-10-29에 없어졌다 — 배경은 캐스팅하지 않은 캐릭터 슬롯이다.)
 > `CharacterRig ↔ ShotResponse`는 자연스러운 순환이라 끊지 않는다 — 억지로 끊으면 depth가 두 곳에 생긴다
 > ([PLAN_stage-seam.md](../../../docs/PLAN_stage-seam.md) §3).
 

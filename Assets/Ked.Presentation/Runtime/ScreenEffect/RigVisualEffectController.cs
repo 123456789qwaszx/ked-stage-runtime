@@ -49,7 +49,7 @@ public sealed class RigVisualEffectController : IDisposable
     private readonly Image _targetImage;
 
     // 같은 runtime material을 함께 쓰는 두 번째 그래픽(캐릭터 초상의 위 겹).
-    // 없을 수 있다 — 배경 리그처럼 그래픽이 하나뿐인 경우는 null이다.
+    // 없을 수 있다 — 그래픽이 하나뿐인 리그라면 null이다(배경도 지금은 캐릭터 리그라 둘 다 있다).
     private readonly Image _companionImage;
     
     private Material _runtimeMaterial;

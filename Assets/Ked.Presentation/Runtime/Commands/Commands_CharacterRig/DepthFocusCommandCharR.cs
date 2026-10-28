@@ -34,7 +34,9 @@ public sealed class DepthFocusCommandSpecCharR : CharacterRigCommandSpecBase
 /// 캐릭터는 대부분 mid 레이어에 몰려 있고 깊이는 size 커맨드의 프리셋으로 갈리기 때문에,
 /// 레이어를 기준으로 삼으면 전원이 같은 값이 되어 v2의 실패를 반복한다.
 ///
-/// 배경은 대상이 아니다 — screen_blur가 이미 레이어 단위로 처리한다.
+/// 배경은 대상이 아니다 — screen_blur가 이미 레이어 단위로 처리한다. 배경도 캐릭터 리그로 서지만
+/// **캐스팅하지 않은 슬롯**이라, 배역이 있는 슬롯만 훑는다(focus_clear도 같다 — 배경의 screen_blur를 지우지 않는다).
+/// 플래그가 아니라 구조로 빠진다.
 /// </summary>
 public sealed class DepthFocusCommandCharR : ClaimTweenCommandBase
 {
@@ -55,7 +57,7 @@ public sealed class DepthFocusCommandCharR : ClaimTweenCommandBase
     private readonly DepthFocusCommandSpecCharR _spec;
 
     private readonly List<Binding> _bindings = new();
-    private readonly List<CharacterRigRefs> _scratch = new();
+    private readonly List<KeyValuePair<string, CharacterRigRefs>> _scratch = new();
 
     private CharacterRigRefs _focusRig;
 
@@ -104,13 +106,18 @@ public sealed class DepthFocusCommandCharR : ClaimTweenCommandBase
         float focusScale = _focusRig != null ? _focusRig.SettledDepthScale : 0f;
 
         _scratch.Clear();
-        _stage.characterRigs.CollectAliveRigs(_scratch);
+        _stage.characterRigs.CollectAliveRigEntries(_scratch);
 
         for (int i = 0; i < _scratch.Count; i++)
         {
-            CharacterRigRefs refs = _scratch[i];
+            CharacterRigRefs refs = _scratch[i].Value;
 
             if (refs?.VisualEffect == null)
+                continue;
+
+            // 배경(캐스팅하지 않은 슬롯)은 초점면 계산에 끼지 않는다 — SettledDepthScale 1로 섞이면
+            // 배경이 초점 캐릭터와 같은 깊이에 있는 척 흐려지거나 선명해진다.
+            if (!_stage.castRegistry.TryPeekCharacter(_scratch[i].Key, out _))
                 continue;
 
             _bindings.Add(new Binding(

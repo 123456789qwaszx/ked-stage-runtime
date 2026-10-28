@@ -40,7 +40,7 @@
 
 ## 2. `rig-schemas.json`
 
-리그 4종의 **노드 트리 초기 상태**. 빌더 로직을 전사한 것이 아니라,
+리그 2종(character · screenEffect)의 **노드 트리 초기 상태**. 빌더 로직을 전사한 것이 아니라,
 실제 프리팹·실제 빌더로 리그를 세운 뒤 **실물 `RectTransform`에서 읽은 값**이다
 (`BindRefsFromRoot`의 그래프 검증·복구까지 지난 뒤의 상태 — 런타임과 같은 경로).
 
@@ -67,7 +67,7 @@ new RectSpace(capturedUnderParentSize, Vec2.Half)
 
 | 필드 | 뜻 |
 |---|---|
-| `rigKind` | `character` · `background` · `screenEffect` — 익스포터가 내보내는 세 종류다. 노드 수는 스키마를 따라 변하므로 여기 적지 않는다 |
+| `rigKind` | `character` · `screenEffect` — 익스포터가 내보내는 두 종류다. 배경은 캐스팅하지 않은 `character` 슬롯이라 따로 없다(2026-10-29까지는 `background`가 있었다). 노드 수는 스키마를 따라 변하므로 여기 적지 않는다 |
 | `sourcePrefab` | 세울 때 쓴 프리팹 에셋 경로. **빈 문자열이면 프리팹 없이 스키마 베이크로 세웠다는 뜻** |
 | `nodes` | 부모가 항상 자식보다 먼저 온다 — 순서대로 넣으면 트리가 세워진다 |
 
@@ -257,6 +257,29 @@ MonoBehaviour.entries[] : { key(캐릭터), offset(px, Vec2), visualScale(무단
 
 없는 조합은 `(캐릭터, 'a', "01")`로 한 번 물러선다(런타임 폴백과 같다). 그것도 없으면
 사이징이 `Unhandled`로 남는다 — 짐작으로 잇지 않는다.
+
+---
+
+## 4b. `background-dimensions.json`
+
+`Resources/Backgrounds/**` → 배경 스프라이트 키 → 픽셀 치수.
+
+**배경은 캐스팅하지 않은 캐릭터 슬롯이다** (재생 저장소 `docs/PLAN_background-as-slot.md`). 리그 스키마는
+`character` 것을 그대로 쓰고, 사이징도 초상과 같은 `HeightFitPreserveAspect`다. 다른 것은 종횡비의 **출처** 하나 —
+초상은 (캐릭터·변형·표정)으로 초상 DB를 찾지만, 배경은 `bg_sprite`의 키 하나로 `Resources/Backgrounds/{키}`를 연다.
+익스포터도 같은 자리를 `Resources.LoadAll<Sprite>`로 읽는다.
+
+| 필드 | 뜻 |
+|---|---|
+| `sourceFolder` | 읽은 Resources 하위 폴더 (재현 정보) |
+| `entries[].key` | `Backgrounds/` 아래 **상대 경로, 확장자 없이** — 런타임이 `Resources.Load`에 넘기는 그 문자열. 정규화 없음(대소문자가 다르면 다른 키). 하위 폴더도 그대로(`ep1/hall`) |
+| `entries[].width` · `.height` | `sprite.rect`의 픽셀 크기. 임포터 `maxTextureSize`(2048)에 걸린 그림은 **줄어든 크기**가 나온다 — 종횡비는 같다 |
+
+없는 키는 사이징만 `Unhandled`로 남는다(슬롯 스폰·가시성은 접힌다 — "슬롯을 못 세웠다"는 거짓말을 하지 않는다).
+
+> 첫 덤프(2026-10-29)는 Unity를 열 수 없는 자리에서 PNG 헤더와 임포터 상한으로 재현해 손으로 냈다.
+> `rig-schemas.json`의 `background` 항목도 같은 날 손으로 걷었다(나머지 두 리그는 바이트 그대로).
+> 다음 `Export Presentation Tuning Dump`가 덮어쓰면 그것이 진실이다 — 차이가 나면 `export-report.json`과 함께 본다.
 
 ---
 

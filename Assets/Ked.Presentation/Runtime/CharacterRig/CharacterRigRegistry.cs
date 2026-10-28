@@ -9,6 +9,10 @@ public sealed class CharacterRigRegistry
 {
     private readonly Dictionary<string, CharacterRigRefs> _rigs = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// 같은 키로 다시 등록하면 옛 리그를 부수고 새 리그로 바꾼다 — 재선언(`slot`·배경 교체 `bg_spawn`)의 의미다.
+    /// 코어 StageReducer.SpawnSlot도 같은 규칙으로 접는다(노드·α가 스키마로, 배역은 남는다).
+    /// </summary>
     public void Register(string rigKey, CharacterRigRefs rigRefs)
     {
         if (_rigs.TryGetValue(rigKey, out CharacterRigRefs existingRig))

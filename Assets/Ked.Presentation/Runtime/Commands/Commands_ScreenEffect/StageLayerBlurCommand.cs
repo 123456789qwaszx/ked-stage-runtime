@@ -26,8 +26,8 @@ public sealed class StageLayerBlurCommandSpec : CommandSpecBase
 /// "이 레이어에 있는 것을 흐린다". 기구만 요소별 셰이더로 바뀌었고, 그래서
 /// 착란원이 요소마다 따로 서고 렌더러 종류(Image / 훗날 SkeletonGraphic)를 가리지 않는다.
 ///
-/// 배경과 캐릭터를 모두 훑는다. far 레이어에는 현재 배경만 있지만, 캐릭터를 그 레이어에
-/// 올리면 같이 흐려지는 것이 이 커맨드의 의미상 맞다.
+/// 레이어 아래의 리그를 전부 훑는다. 배경도 캐릭터 리그다(캐스팅하지 않은 슬롯) — far 레이어에는
+/// 보통 배경만 있지만, 캐릭터를 그 레이어에 올리면 같이 흐려지는 것이 이 커맨드의 의미상 맞다.
 /// </summary>
 public sealed class StageLayerBlurCommand : ClaimTweenCommandBase
 {
@@ -48,7 +48,6 @@ public sealed class StageLayerBlurCommand : ClaimTweenCommandBase
 
     private readonly List<Binding> _bindings = new();
     private readonly List<CharacterRigRefs> _charScratch = new();
-    private readonly List<BackgroundRigRefs> _bgScratch = new();
 
     private RectTransform _contentRoot;
     private float _destAmount;
@@ -97,22 +96,6 @@ public sealed class StageLayerBlurCommand : ClaimTweenCommandBase
         for (int i = 0; i < _charScratch.Count; i++)
         {
             CharacterRigRefs refs = _charScratch[i];
-
-            if (refs?.VisualEffect == null)
-                continue;
-
-            if (!IsDescendantOf(refs.RigRoot, _contentRoot))
-                continue;
-
-            _bindings.Add(new Binding(refs.VisualEffect, refs.VisualEffect.BlurAmount));
-        }
-
-        _bgScratch.Clear();
-        _stage.backgroundRigs.CollectAliveRigs(_bgScratch);
-
-        for (int i = 0; i < _bgScratch.Count; i++)
-        {
-            BackgroundRigRefs refs = _bgScratch[i];
 
             if (refs?.VisualEffect == null)
                 continue;

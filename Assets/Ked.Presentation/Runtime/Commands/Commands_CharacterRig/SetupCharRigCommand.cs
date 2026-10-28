@@ -21,6 +21,11 @@ public sealed class SetupCharRigCommandSpec : CommandSpecBase
     [Tooltip("Base root name. Final name is '{rolePrefix}{rigRootName}'.")]
     public string rigRootName = "CharacterRig";
 
+    [Header("Background")]
+    [Tooltip("배경으로 세운다(bg_spawn·bg_slotNN). 배경은 캐스팅하지 않은 슬롯이다 — " +
+             "배역 있는 슬롯을 덮으면 배역을 풀고 경고한다.")]
+    public bool asBackground;
+
     public string ResolvedRolePrefix
     {
         get
@@ -65,6 +70,17 @@ public sealed class SetupCharRigCommand : CommandBase
 
         string rigKey = spec.roleKey;
         string rolePrefix = spec.ResolvedRolePrefix;
+
+        // 배경 = 캐스팅하지 않은 슬롯. 배역이 남으면 `fade_in harin`이 배경을 페이드하고
+        // focus_on이 배경을 초점면에 넣는다. 코어 StageReducer.Background도 같은 자리에서 배역을 푼다.
+        if (spec.asBackground && _stage.castRegistry.TryPeekCharacter(rigKey, out string castCharacter))
+        {
+            Debug.LogWarning(
+                $"[SetupCharRigCommand] 배경 '{rigKey}'가 배역 있는 슬롯(캐릭터 '{castCharacter}')을 덮는다 — 배역을 푼다. " +
+                "배경과 캐릭터는 같은 키 공간이다. 다른 키를 쓰려던 것이 아닌지 확인할 것.");
+
+            _stage.castRegistry.UncastCharRig(rigKey);
+        }
 
         RectTransform rigRoot = _rigBuilder.BuildCharacterRigRoot(
             spec.rigPrefab,

@@ -81,6 +81,7 @@ public static class PresentationTuningExporter
         ExportRigSchemas(outDir, baseResolution, warnings);
         ExportPresets(outDir, warnings);
         ExportPortraitDimensions(outDir, warnings);
+        ExportBackgroundDimensions(outDir, warnings);
         WriteReport(outDir, warnings);
 
         Debug.Log($"[PresentationTuningExporter] 완료. out={outDir}, 경고 {warnings.Count}건");
@@ -154,8 +155,7 @@ public static class PresentationTuningExporter
     private static void ExportRigSchemas(
         string outDir, BaseResolutionDto baseResolution, List<string> warnings)
     {
-        (RectTransform character, RectTransform background) prefabs =
-            ResolveRigPrefabs(warnings);
+        RectTransform characterPrefab = ResolveCharacterRigPrefab(warnings);
 
         // 리그가 딛고 설 임시 부모: 기준 해상도 크기, 가운데 pivot.
         // 코어의 RectSpace(BaseResolution, Vec2.Half)와 같은 공간이다 —
@@ -173,30 +173,16 @@ public static class PresentationTuningExporter
 
         try
         {
-            // Character
+            // Character — 배경도 이 리그다(캐스팅하지 않은 슬롯). 리그 스키마는 둘뿐이다.
             {
                 CharacterRigBuilder builder = new();
-                RectTransform root = builder.BuildCharacterRigRoot(prefabs.character);
+                RectTransform root = builder.BuildCharacterRigRoot(characterPrefab);
                 root.SetParent(stage, false);
                 builder.BindRefsFromRoot(root, "", out _);
 
                 dump.rigs.Add(CaptureRig(
-                    "character", AssetPathOf(prefabs.character), root,
+                    "character", AssetPathOf(characterPrefab), root,
                     CharacterSchemaNodes(), warnings));
-
-                Object.DestroyImmediate(root.gameObject);
-            }
-
-            // Background
-            {
-                BackgroundRigBuilder builder = new();
-                RectTransform root = builder.BuildBackgroundRigRoot(prefabs.background);
-                root.SetParent(stage, false);
-                builder.BindRefsFromRoot(root, "", out _);
-
-                dump.rigs.Add(CaptureRig(
-                    "background", AssetPathOf(prefabs.background), root,
-                    BackgroundSchemaNodes(), warnings));
 
                 Object.DestroyImmediate(root.gameObject);
             }
@@ -231,8 +217,7 @@ public static class PresentationTuningExporter
     /// 부트스트랩이 실제로 쓰는 프리팹을 그대로 꺼낸다 — 씬에서 IRigPrefabSource를 내주는 쪽을 찾는다
     /// (예제에서는 SampleBootstrap). 못 찾으면 프리팹 없이 세우되 — 런타임과 다를 수 있으므로 경고한다.
     /// </summary>
-    private static (RectTransform character, RectTransform background)
-        ResolveRigPrefabs(List<string> warnings)
+    private static RectTransform ResolveCharacterRigPrefab(List<string> warnings)
     {
         IRigPrefabSource source = FindInScene<IRigPrefabSource>();
 
@@ -242,10 +227,10 @@ public static class PresentationTuningExporter
                 "리그 프리팹을 내주는 컴포넌트(IRigPrefabSource)를 씬에서 찾지 못했다. " +
                 "리그를 프리팹 없이(스키마 베이크) 세웠다 — 런타임과 다를 수 있다.");
 
-            return (null, null);
+            return null;
         }
 
-        return (source.CharacterRigPrefab, source.BackgroundRigPrefab);
+        return source.CharacterRigPrefab;
     }
 
     /// <summary>열린 씬에서 본체 계약을 구현한 첫 컴포넌트를 찾는다. 비활성 오브젝트도 본다.</summary>
@@ -333,16 +318,6 @@ public static class PresentationTuningExporter
         List<(string, string)> nodes = new(CharacterRigSchema.Nodes.Length);
 
         foreach (CharacterRigSchema.NodeDef n in CharacterRigSchema.Nodes)
-            nodes.Add((n.Id.ToString(), n.Parent?.ToString()));
-
-        return nodes;
-    }
-
-    private static List<(string, string)> BackgroundSchemaNodes()
-    {
-        List<(string, string)> nodes = new(BackgroundRigSchema.Nodes.Length);
-
-        foreach (BackgroundRigSchema.NodeDef n in BackgroundRigSchema.Nodes)
             nodes.Add((n.Id.ToString(), n.Parent?.ToString()));
 
         return nodes;
@@ -460,6 +435,73 @@ public static class PresentationTuningExporter
             JsonUtility.ToJson(dto, true));
     }
 
+    // ── 배경 치수 ────────────────────────────────────────────────────
+    //
+    // 배경은 캐스팅하지 않은 캐릭터 슬롯이다(StageReducer.Background.cs). 사이징은 초상과 같지만
+    // 종횡비의 출처가 다르다 — `bg_sprite`의 키 하나로 Resources/Backgrounds/{키}를 연다.
+    // 키는 런타임 해석기(ResourcesSpriteResolver)가 Resources.Load에 넘기는 그 문자열이다:
+    // Backgrounds/ 아래 **상대 경로, 확장자 없이**. 하위 폴더(ep1/hall)도 그대로 키가 된다 —
+    // 스프라이트 이름만 쓰면 하위 폴더의 같은 이름이 서로를 덮는다.
+
+    private static void ExportBackgroundDimensions(string outDir, List<string> warnings)
+    {
+        BackgroundDimensionsDto dto = new() { sourceFolder = "Resources/" + ResourcesSpriteResolver.BackgroundsRoot };
+
+        Sprite[] sprites = Resources.LoadAll<Sprite>(ResourcesSpriteResolver.BackgroundsRoot);
+
+        if (sprites == null || sprites.Length == 0)
+        {
+            warnings.Add(
+                $"배경 치수: Resources/{ResourcesSpriteResolver.BackgroundsRoot} 에 스프라이트가 없다. 빈 덤프를 냈다 — " +
+                "배경 사이징 폴드가 전부 Unhandled가 된다.");
+        }
+
+        HashSet<string> seen = new(StringComparer.Ordinal);
+        string marker = "/Resources/" + ResourcesSpriteResolver.BackgroundsRoot + "/";
+
+        foreach (Sprite sprite in sprites ?? Array.Empty<Sprite>())
+        {
+            string assetPath = AssetDatabase.GetAssetPath(sprite).Replace('\\', '/');
+            int at = assetPath.LastIndexOf(marker, StringComparison.Ordinal);
+
+            if (at < 0)
+            {
+                warnings.Add($"배경 치수: Resources/{ResourcesSpriteResolver.BackgroundsRoot} 밖의 에셋이 섞였다 ({assetPath}). 건너뛰었다.");
+                continue;
+            }
+
+            string key = Path.ChangeExtension(assetPath.Substring(at + marker.Length), null);
+
+            // 한 텍스처에 스프라이트가 여럿이면 Resources.Load<Sprite>(키)는 첫 것을 준다 — 덤프도 첫 것만.
+            if (!seen.Add(key))
+            {
+                warnings.Add($"배경 치수: '{key}'에 스프라이트가 여럿이다(Multiple 모드?). 첫 것만 냈다.");
+                continue;
+            }
+
+            Rect rect = sprite.rect;
+
+            if (rect.width <= 0f || rect.height <= 0f)
+            {
+                warnings.Add($"배경 치수: 스프라이트 rect가 유효하지 않다 ({key} = {rect.size}). 건너뛰었다.");
+                continue;
+            }
+
+            dto.entries.Add(new BackgroundDimensionDto
+            {
+                key = key,
+                width = rect.width,
+                height = rect.height,
+            });
+        }
+
+        dto.entries.Sort((a, b) => string.CompareOrdinal(a.key, b.key));
+
+        File.WriteAllText(
+            Path.Combine(outDir, "background-dimensions.json"),
+            JsonUtility.ToJson(dto, true));
+    }
+
     // ── 보고서 ───────────────────────────────────────────────────────
 
     private static void WriteReport(string outDir, List<string> warnings)
@@ -551,6 +593,22 @@ public static class PresentationTuningExporter
         // 가시성 축. hasCanvasGroup이 bool 게이트다 — 위 CaptureNode 주석 참조.
         public bool hasCanvasGroup;
         public float canvasGroupAlpha;
+    }
+
+    [Serializable]
+    private sealed class BackgroundDimensionsDto
+    {
+        public string sourceFolder;
+        public List<BackgroundDimensionDto> entries = new();
+    }
+
+    [Serializable]
+    private sealed class BackgroundDimensionDto
+    {
+        // Backgrounds/ 아래 상대 경로(확장자 없음) = bg_sprite가 쓰는 키.
+        public string key;
+        public float width;
+        public float height;
     }
 
     [Serializable]
