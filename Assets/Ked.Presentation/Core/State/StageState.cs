@@ -174,6 +174,21 @@ namespace Ked.Presentation.Core
         }
 
         /// <summary>pose — 슬롯의 현재 초상 변형. 빈 값이면 기본 변형으로 되돌린다.</summary>
+        /// <summary>
+        /// 슬롯의 배역을 푼다 — 런타임 CastRegistry.UncastCharRig과 같다(두 맵과 변형을 함께 비운다).
+        /// 배경 스폰이 배역 있는 슬롯을 덮을 때 쓴다(StageReducer.Background.cs).
+        /// </summary>
+        public bool ClearCast(string slotKey)
+        {
+            if (slotKey == null || !_characterBySlot.TryGetValue(slotKey, out string characterKey))
+                return false;
+
+            _characterBySlot.Remove(slotKey);
+            _slotByCharacter.Remove(characterKey);
+            _variantBySlot.Remove(slotKey);
+            return true;
+        }
+
         public void SetVariant(string slotKey, string variantKey)
         {
             if (string.IsNullOrEmpty(slotKey))
