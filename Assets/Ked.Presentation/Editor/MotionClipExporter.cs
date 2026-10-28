@@ -18,7 +18,7 @@ using UnityEngine;
 // 거부하는 것(이유를 전부 적어 돌려준다 — 조용히 빠뜨리지 않는다):
 //   · 다른 속성(m_LocalPosition은 anchoredPosition으로, m_LocalRotation은 회전 보간을 Euler Angles로)
 //   · 스키마에 없는 노드 · Track_Focus · 가중 탄젠트 · 무한 탄젠트(계단 키 — JSON에 Infinity가 없다)
-//   · MotionRules가 거르는 전부(restore인데 마지막 키가 중립값이 아닌 것 등)
+//   · MotionRules가 거르는 전부(키 시각·노드·성분 모양). 값의 뜻(relative/absolute)은 파일에 없다 — 대본의 커맨드가 정한다(motions/2)
 //
 // 리그는 런타임 코드가 아니라 **rig-schemas.json**으로 안다 — 이 도구의 의존은 코어(규약)와 데이터 파일뿐이다.
 // 그래서 저작 도구(VnTool)와 같은 조건이고, 언젠가 따로 떼어도 코드가 안 바뀐다.
@@ -81,7 +81,7 @@ public static class MotionClipExporter
                 continue;
             }
 
-            if (TryConvert(def.clip, def.EffectiveName, def.rigSchemaId, def.end, def.ModeOf, rig, out MotionClip clip, out List<string> why))
+            if (TryConvert(def.clip, def.EffectiveName, def.rigSchemaId, def.end, rig, out MotionClip clip, out List<string> why))
                 clips.Add(clip);
             else
                 errors.AddRange(why);
@@ -178,7 +178,6 @@ public static class MotionClipExporter
         string name,
         string rigId,
         MotionEnd end,
-        Func<string, MotionChannelKind, MotionChannelMode> modeOf,
         RigNodeSet rig,
         out MotionClip result,
         out List<string> errors)
@@ -217,19 +216,13 @@ public static class MotionClipExporter
 
             if (!channels.TryGetValue(id, out MotionChannel channel))
             {
-                channel = new MotionChannel { Node = node, Kind = kind, Mode = modeOf(node, kind) };
+                channel = new MotionChannel { Node = node, Kind = kind };
                 order.Add(id);
             }
 
             // Unity는 회전·위치·배율을 세 성분 묶음으로 기록해 한 축만 키잉해도 나머지가 상수로 따라온다.
-            // relative 채널에서 전 구간 중립값인 성분은 "아무 변화 없음"이라 빼도 뜻이 같다 — 파일에 싣지 않는다.
-            // absolute는 "이 값으로"라는 뜻이 있으므로 그대로 둔다.
-            if (channel.Mode == MotionChannelMode.Relative && IsConstant(keys, MotionMath.Neutral(kind)))
-            {
-                channels[id] = channel;
-                continue;
-            }
-
+            // 그대로 싣는다 — 파일은 mode를 모르므로(motions/2) 상수 0이 "무변"(relative)인지 "0으로"(absolute)인지
+            // 여기서 정할 수 없다. 성분을 빼는 것은 작가가 Animation 창에서 한다.
             switch (component)
             {
                 case 0: channel.X = keys; break;
@@ -243,12 +236,9 @@ public static class MotionClipExporter
         if (errors.Count > 0)
             return false;
 
-        // 성분이 전부 빠진 채널(relative인데 전 구간 중립값) — 채널 자체가 무변이라 싣지 않는다.
-        order.RemoveAll(id => !channels[id].HasX && !channels[id].HasY && !channels[id].HasZ);
-
         if (order.Count == 0)
         {
-            errors.Add($"{label}: 변화가 있는 채널이 없다 — relative 채널의 키가 전부 중립값이다");
+            errors.Add($"{label}: 낼 수 있는 채널이 없다 — 리그 노드의 anchoredPosition·localScale·localEulerAngles 키가 없다");
             return false;
         }
 
@@ -379,17 +369,6 @@ public static class MotionClipExporter
     private static bool SegmentMatches(string segment, string id)
         => segment == id || segment.EndsWith(id, StringComparison.Ordinal);
 
-    private static bool IsConstant(CurveKey[] keys, float value)
-    {
-        foreach (CurveKey k in keys)
-        {
-            if (Math.Abs(k.Value - value) > MotionRules.Tolerance || k.InTangent != 0f || k.OutTangent != 0f)
-                return false;
-        }
-
-        return true;
-    }
-
     private static bool TryConvertKeys(AnimationCurve curve, string label, List<string> errors, out CurveKey[] keys)
     {
         keys = null;
@@ -431,7 +410,7 @@ public static class MotionClipExporter
     public static string ToJson(IReadOnlyList<MotionClip> clips)
     {
         StringBuilder sb = new();
-        sb.Append("{\n  \"schema\": \"motions/1\",\n  \"motions\": [");
+        sb.Append("{\n  \"schema\": \"motions/2\",\n  \"motions\": [");
 
         for (int m = 0; m < clips.Count; m++)
         {
@@ -445,8 +424,7 @@ public static class MotionClipExporter
             {
                 MotionChannel ch = clip.Channels[c];
                 sb.Append(c > 0 ? ",\n" : "\n");
-                sb.Append("        { \"node\": \"").Append(ch.Node).Append("\", \"kind\": \"").Append(KindToken(ch.Kind))
-                  .Append("\", \"mode\": \"").Append(ch.Mode == MotionChannelMode.Relative ? "relative" : "absolute").Append('"');
+                sb.Append("        { \"node\": \"").Append(ch.Node).Append("\", \"kind\": \"").Append(KindToken(ch.Kind)).Append('"');
                 AppendComponent(sb, "x", ch.X);
                 AppendComponent(sb, "y", ch.Y);
                 AppendComponent(sb, "z", ch.Z);

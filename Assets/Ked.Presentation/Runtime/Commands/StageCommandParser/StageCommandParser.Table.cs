@@ -30,7 +30,7 @@ public sealed partial class StageCommandParser
         ["rotate_reset"] = (p, c) => p.EnqueueRotateResetSpec(c.Arg(0), c.Arg(1, "0.4s"), c.Arg(2, "")),
         ["scale_reset"] = (p, c) => p.EnqueueSizeResetSpec(c.Arg(0), c.Arg(1, "0.4s"), c.Arg(2, "")),
         ["gesture"] = (p, c) => p.EnqueueGestureSpec(c.Arg(0), c.Arg(1, "0u"), c.Arg(2, "0u"), c.Arg(3, "12fr"), c.Arg(4, ""), c.Arg(5, "")),
-        ["motion"] = (p, c) => p.EnqueueMotionSpec(c.Arg(0), c.Arg(1)),
+        ["motion"] = (p, c) => p.EnqueueMotionSpec(c.Arg(0), c.Arg(1), c.Arg(2, MotionModeToken.Relative)),
         ["sibling_front"] = (p, c) => p.EnqueueCharacterSiblingFrontSpec(c.Arg(0)),
         ["sibling_back"] = (p, c) => p.EnqueueCharacterSiblingBackSpec(c.Arg(0)),
         ["char_to"] = (p, c) => p.EnqueueMoveCharacterRigToStageLayerSpec(c.Arg(0), c.Arg(1, "stage00"), c.Arg(2, "mid")),

@@ -8,19 +8,20 @@ using UnityEngine;
 // 살고, 여기서는 읽기만 한다. 만드는 쪽은 에디터의 내보내기(AnimationClip → motions.json)다.
 // 파일이 없으면 모션 0개로 조용히 동작한다 — 모션을 안 쓰는 프로젝트가 정상 경로다.
 //
-// 스키마 (motions/1) — 배열이다(JsonUtility가 딕셔너리를 못 읽는다):
+// 스키마 (motions/2) — 배열이다(JsonUtility가 딕셔너리를 못 읽는다):
 // {
-//   "schema": "motions/1",
+//   "schema": "motions/2",
 //   "motions": [
 //     { "name": "nod", "rig": "character", "duration": 0.6, "end": "restore",
 //       "channels": [
-//         { "node": "CharacterPortrait_Track_Move_Y", "kind": "position", "mode": "relative",
+//         { "node": "CharacterPortrait_Track_Move_Y", "kind": "position",
 //           "y": [ { "t": 0, "v": 0, "inTangent": 0, "outTangent": -120 }, … ] }
 //       ] }
 //   ]
 // }
 //
-// end: restore | commit (필수) · kind: position | scale | euler · mode: relative | absolute (둘 다 필수 — 기본값 없음)
+// end: restore | commit (필수 — 기본값 없음) · kind: position | scale | euler. 채널에 mode는 **없다** — relative/absolute는
+// 재생하는 커맨드(motion slot name mode)가 정한다. motions/1의 "mode"는 읽을 때 무시된다(스키마 경고만).
 // 성분 x·y·z는 생략 가능(= 건드리지 않는다). 키의 t는 **초**. 뜻은 docs/motion-contract.md가 규범이다.
 //
 // 검증은 코어 MotionRules 한 곳이다(어긋난 모션은 로그 + 무시). 내보내기도 같은 규칙을 쓰므로
@@ -29,7 +30,7 @@ using UnityEngine;
 public sealed class MotionLibrary
 {
     public const string BundleFileName = "motions.json";
-    private const string ExpectedSchema = "motions/1";
+    private const string ExpectedSchema = "motions/2";
 
     private readonly Dictionary<string, MotionClip> _clips;
 
@@ -144,17 +145,10 @@ public sealed class MotionLibrary
                 return false;
             }
 
-            if (!TryParseMode(c.mode, out MotionChannelMode mode))
-            {
-                Warn(sourceLabel, name, $"채널 {i}: mode는 relative|absolute 여야 한다 ('{c.mode}') — 기본값은 없다");
-                return false;
-            }
-
             channels[i] = new MotionChannel
             {
                 Node = c.node,
                 Kind = kind,
-                Mode = mode,
                 X = ToKeys(c.x),
                 Y = ToKeys(c.y),
                 Z = ToKeys(c.z),
@@ -200,16 +194,6 @@ public sealed class MotionLibrary
         }
     }
 
-    private static bool TryParseMode(string token, out MotionChannelMode mode)
-    {
-        switch ((token ?? "").Trim().ToLowerInvariant())
-        {
-            case "relative": mode = MotionChannelMode.Relative; return true;
-            case "absolute": mode = MotionChannelMode.Absolute; return true;
-            default: mode = default; return false;
-        }
-    }
-
     private static void Warn(string sourceLabel, string motionName, string why)
         => Debug.LogWarning($"[MotionLibrary] {sourceLabel}: 모션 '{motionName}' 무시 — {why}.");
 
@@ -237,7 +221,6 @@ public sealed class MotionLibrary
     {
         public string node = "";
         public string kind = "";
-        public string mode = "";
         public List<KeyDto> x = new();
         public List<KeyDto> y = new();
         public List<KeyDto> z = new();

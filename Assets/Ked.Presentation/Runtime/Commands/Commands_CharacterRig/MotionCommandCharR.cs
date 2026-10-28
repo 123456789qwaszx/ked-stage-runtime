@@ -9,12 +9,16 @@ using UnityEngine;
 public sealed class MotionCommandSpecCharR : CharacterRigCommandSpecBase
 {
     [Header("Motion")]
-    [Tooltip("motions.json에서 읽은 클립(검증된 것). 채널마다 노드·종류·mode·키가 들어 있다.")]
+    [Tooltip("motions.json에서 읽은 클립(검증된 것). 채널마다 노드·종류·키가 들어 있다 — mode는 없다.")]
     public MotionClip clip;
+
+    [Tooltip("키 값을 어떻게 읽는가 — relative: 시작값 + 키(배율은 ×) · absolute: 키 그대로. 커맨드의 세 번째 인자.")]
+    public MotionChannelMode mode = MotionChannelMode.Relative;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// motion — 모션 클립 재생. commit이면 채널마다 **마지막 키 = 클레임**이고, restore면 남기는 것이 없다.
+// motion — 모션 클립 재생. commit이면 채널마다 **마지막 키 = 클레임**이고, restore면 남기는 것이 없다
+// (끝나면 시작값을 되쓴다 — 마지막 키가 무엇이든). relative/absolute는 클립이 아니라 스펙(mode)이 정한다.
 //
 // 세 갈래가 같은 값을 본다(MotionMath.ClaimFor):
 //   ① 장부 게시  — commit이면 ClaimTarget에서 채널마다 종점을 게시한다(place가 정착 체인을 볼 수 있게).
@@ -153,7 +157,9 @@ public sealed class MotionCommandCharR : CommandBase
             Bound b = _bound[i];
 
             b.Start = ReadStart(b.Rect, b.Channel.Kind);
-            b.End = MotionMath.EndValue(b.Channel, b.Start.ToCore()).ToUnity();
+            b.End = _spec.clip.End == MotionEnd.Restore
+                ? b.Start
+                : MotionMath.EndValue(b.Channel, _spec.mode, b.Start.ToCore()).ToUnity();
             _bound[i] = b;
 
             if (_spec.clip.End == MotionEnd.Commit)
@@ -161,6 +167,7 @@ public sealed class MotionCommandCharR : CommandBase
         }
     }
 
+    // restore의 End는 Start다(Claim) — 끝·Skip·스텝 경계 어디서 확정돼도 시작값으로 돌아간다.
     private void Commit()
     {
         for (int i = 0; i < _bound.Count; i++)
@@ -201,7 +208,7 @@ public sealed class MotionCommandCharR : CommandBase
             if (_bound[i].Rect != rect)
                 continue;
 
-            Write(rect, _bound[i].Channel.Kind, MotionMath.Compose(_bound[i].Channel, _bound[i].Start.ToCore(), seconds).ToUnity());
+            Write(rect, _bound[i].Channel.Kind, MotionMath.Compose(_bound[i].Channel, _spec.mode, _bound[i].Start.ToCore(), seconds).ToUnity());
         }
     }
 

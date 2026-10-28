@@ -52,8 +52,6 @@ namespace Ked.Presentation.Core.Tests.UnityParity
 
         private string PathTo(RectTransform node) => AnimationUtility.CalculateTransformPath(node, _rigRoot);
 
-        private static MotionChannelMode AllAbsolute(string node, MotionChannelKind kind) => MotionChannelMode.Absolute;
-
         // 내보내기는 리그를 rig-schemas.json으로 안다 — 테스트도 같은 길을 쓴다(실제 덤프).
         private static MotionClipExporter.RigNodeSet CharacterRig()
         {
@@ -72,10 +70,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(_refs.CharacterPortrait_Track_Move_Y), typeof(RectTransform), "m_AnchoredPosition.y"), y);
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(_refs.CharacterPortrait_SwayPivot), typeof(Transform), "localEulerAnglesRaw.z"), z);
 
-            MotionChannelMode Modes(string node, MotionChannelKind kind)
-                => kind == MotionChannelKind.Position ? MotionChannelMode.Relative : MotionChannelMode.Absolute;
-
-            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "nod", "character", MotionEnd.Commit, Modes, CharacterRig(), out MotionClip motion, out List<string> errors),
+            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "nod", "character", MotionEnd.Commit, CharacterRig(), out MotionClip motion, out List<string> errors),
                 string.Join("\n", errors));
 
             Assert.AreEqual(0.6f, motion.Duration, 1e-5f);
@@ -85,7 +80,6 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             MotionChannel pos = motion.Channels[0];
             Assert.AreEqual("CharacterPortrait_Track_Move_Y", pos.Node);
             Assert.AreEqual(MotionChannelKind.Position, pos.Kind);
-            Assert.AreEqual(MotionChannelMode.Relative, pos.Mode);
             Assert.IsFalse(pos.HasX);
             Assert.AreEqual(3, pos.Y.Length);
             Assert.AreEqual(-120f, pos.Y[0].OutTangent, 0f);
@@ -111,7 +105,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(RectTransform), "m_AnchoredPosition.y"), y);
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "m_LocalScale.x"), sx);
 
-            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "sway", "character", MotionEnd.Commit, AllAbsolute, CharacterRig(), out MotionClip motion, out List<string> errors),
+            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "sway", "character", MotionEnd.Commit, CharacterRig(), out MotionClip motion, out List<string> errors),
                 string.Join("\n", errors));
 
             MotionChannel pos = motion.Channels[0];
@@ -148,7 +142,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(_refs.CharSlot_Track_Y), typeof(RectTransform), "m_AnchoredPosition.y"), weighted);
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(_refs.CharSlot_Scale), typeof(Transform), "m_LocalScale.z"), plain);
 
-            Assert.IsFalse(MotionClipExporter.TryConvert(clip, "bad", "character", MotionEnd.Commit, AllAbsolute, CharacterRig(), out _, out List<string> errors));
+            Assert.IsFalse(MotionClipExporter.TryConvert(clip, "bad", "character", MotionEnd.Commit, CharacterRig(), out _, out List<string> errors));
 
             string all = string.Join("\n", errors);
             StringAssert.Contains("anchoredPosition", all);
@@ -159,14 +153,13 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             // Track_Focus는 변환은 되지만 규칙에서 걸린다 — 다른 오류가 없을 때 드러난다.
             AnimationClip focusOnly = NewClip();
             AnimationUtility.SetEditorCurve(focusOnly, EditorCurveBinding.FloatCurve(PathTo(_refs.CharSlot_Track_Focus), typeof(RectTransform), "m_AnchoredPosition.x"), plain);
-            Assert.IsFalse(MotionClipExporter.TryConvert(focusOnly, "focus", "character", MotionEnd.Commit, AllAbsolute, CharacterRig(), out _, out errors));
+            Assert.IsFalse(MotionClipExporter.TryConvert(focusOnly, "focus", "character", MotionEnd.Commit, CharacterRig(), out _, out errors));
             StringAssert.Contains("Track_Focus", string.Join("\n", errors));
 
-            // restore인데 마지막 키가 남는다 — 선언과 키가 어긋나면 거부.
+            // restore인데 마지막 키가 남는다 — 모양 규칙은 막지 않는다(재생이 끝에서 시작값을 되쓴다).
             AnimationClip stays = NewClip();
             AnimationUtility.SetEditorCurve(stays, EditorCurveBinding.FloatCurve(PathTo(node), typeof(RectTransform), "m_AnchoredPosition.x"), plain);
-            Assert.IsFalse(MotionClipExporter.TryConvert(stays, "stays", "character", MotionEnd.Restore, (n, k) => MotionChannelMode.Relative, CharacterRig(), out _, out errors));
-            StringAssert.Contains("restore", string.Join("\n", errors));
+            Assert.IsTrue(MotionClipExporter.TryConvert(stays, "stays", "character", MotionEnd.Restore, CharacterRig(), out _, out errors), string.Join("\n", errors));
         }
 
         [Test]
@@ -183,7 +176,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve("CharacterPortrait_Track_Move_Y", typeof(RectTransform), "m_AnchoredPosition.y"),
                 new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 0f)));
 
-            Assert.IsFalse(MotionClipExporter.TryConvert(clip, "stray", "character", MotionEnd.Restore, (n, k) => MotionChannelMode.Relative, rig, out _, out List<string> errors));
+            Assert.IsFalse(MotionClipExporter.TryConvert(clip, "stray", "character", MotionEnd.Restore, rig, out _, out List<string> errors));
             StringAssert.Contains("계층", string.Join("\n", errors));
         }
 
@@ -204,9 +197,10 @@ namespace Ked.Presentation.Core.Tests.UnityParity
         }
 
         [Test]
-        public void relative에서_전_구간_중립값인_성분은_빠지고_absolute는_남는다()
+        public void 상수_성분도_그대로_나온다_파일은_mode를_모른다()
         {
-            // 회전 z만 키잉해도 Unity는 x·y를 상수 0으로 함께 기록한다(세 성분 묶음).
+            // 회전 z만 키잉해도 Unity는 x·y를 상수 0으로 함께 기록한다(세 성분 묶음). motions/2는 mode가 없어
+            // 상수 0이 "무변"인지 "0으로"인지 낼 때 정할 수 없다 — 그대로 싣는다.
             AnimationClip clip = NewClip();
             RectTransform node = _refs.CharacterPortrait_SwayPivot;
             AnimationCurve flat = new(new Keyframe(0f, 0f), new Keyframe(0.4f, 0f));
@@ -216,20 +210,14 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.y"), flat);
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.z"), tilt);
 
-            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "bow_rel", "character", MotionEnd.Commit, (n, k) => MotionChannelMode.Relative, CharacterRig(), out MotionClip rel, out List<string> errors), string.Join("\n", errors));
-            Assert.IsFalse(rel.Channels[0].HasX, "relative 0→0은 무변 — 뺀다");
-            Assert.IsFalse(rel.Channels[0].HasY);
-            Assert.IsTrue(rel.Channels[0].HasZ);
+            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "bow", "character", MotionEnd.Commit, CharacterRig(), out MotionClip bow, out List<string> errors), string.Join("\n", errors));
+            Assert.IsTrue(bow.Channels[0].HasX);
+            Assert.IsTrue(bow.Channels[0].HasY);
+            Assert.IsTrue(bow.Channels[0].HasZ);
 
-            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "bow_abs", "character", MotionEnd.Commit, AllAbsolute, CharacterRig(), out MotionClip abs, out errors), string.Join("\n", errors));
-            Assert.IsTrue(abs.Channels[0].HasX, "absolute 0→0은 \"0으로\"라는 뜻 — 남긴다");
-            Assert.IsTrue(abs.Channels[0].HasY);
-
-            // 전부 중립값이면 채널이 없는 것 — 거부.
-            AnimationClip still = NewClip();
-            AnimationUtility.SetEditorCurve(still, EditorCurveBinding.FloatCurve(PathTo(node), typeof(Transform), "localEulerAnglesRaw.z"), flat);
-            Assert.IsFalse(MotionClipExporter.TryConvert(still, "still", "character", MotionEnd.Restore, (n, k) => MotionChannelMode.Relative, CharacterRig(), out _, out errors));
-            StringAssert.Contains("변화", string.Join("\n", errors));
+            string json = MotionClipExporter.ToJson(new[] { bow });
+            StringAssert.Contains("\"schema\": \"motions/2\"", json);
+            StringAssert.DoesNotContain("\"mode\"", json);
         }
 
         [Test]
@@ -239,9 +227,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(PathTo(_refs.CharSlot_Track_X), typeof(RectTransform), "m_AnchoredPosition.x"),
                 new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 80f)));
 
-            MotionChannelMode Relative(string n, MotionChannelKind k) => MotionChannelMode.Relative;
-
-            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "step", "character", MotionEnd.Commit, Relative, CharacterRig(), out MotionClip motion, out List<string> errors), string.Join("\n", errors));
+            Assert.IsTrue(MotionClipExporter.TryConvert(clip, "step", "character", MotionEnd.Commit, CharacterRig(), out MotionClip motion, out List<string> errors), string.Join("\n", errors));
 
             string json = MotionClipExporter.ToJson(new[] { motion });
             MotionLibrary library = MotionLibrary.Parse(json, "test", CharacterRigSchema.NodeIds());
@@ -251,7 +237,6 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             Assert.AreEqual(motion.Duration, back.Duration, 1e-6f);
             Assert.AreEqual(MotionEnd.Commit, back.End);
             Assert.AreEqual(80f, back.Channels[0].X[1].Value, 1e-6f);
-            Assert.AreEqual(MotionChannelMode.Relative, back.Channels[0].Mode);
         }
     }
 }

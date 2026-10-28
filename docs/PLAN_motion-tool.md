@@ -124,20 +124,20 @@ tests: Ked.Presentation.Core.Tests(그대로) · Mt.Authoring.Tests(xunit) · Mt
 ```
 { schema, rigSchemas: { path, sha256 }, baseResolution: { path },
   preview: { portrait: "assets/harin_a_01.png" },
-  motions: [ { name, rig, duration, end, defaultMode,
-               channels: [ { node, kind, mode,
+  motions: [ { name, rig, duration, end, previewMode,
+               channels: [ { node, kind,
                              x|y|z: { keys: [ { t, v, inTangent, outTangent, tangent: "auto|flat|linear|free", broken: bool } ] } } ],
                notes } ] }
 ```
-키의 수치는 `motions/1`과 같고, `tangent`·`broken`·`defaultMode`·`notes`·`preview`가 제작 정보다. 내보내기는 그것을 벗긴다.
+키의 수치는 `motions/2`와 같고, `tangent`·`broken`·`previewMode`(뷰포트가 키를 relative/absolute 어느 쪽으로 보여 줄지 — 파일에 안 나간다)·`notes`·`preview`가 제작 정보다. 내보내기는 그것을 벗긴다.
 
-### 5.2 내보내기 — `motions/1` (규약 그대로)
+### 5.2 내보내기 — `motions/2` (규약 그대로)
 
 **정규 직렬화를 규약에 올린다.** 필드 순서·2칸 들여쓰기·invariant `"R"` 포맷·UTF-8(BOM 없음)·LF — Unity 내보내기(`MotionClipExporter.ToJson`)가 지금 내는 그 모양. 두 생산자가 같은 키에서 **같은 바이트**를 내야 "둘 중 무엇으로 만들었는지가 파일에 남지 않는다"(§6). `motion-contract.md`에 §7로 적는다.
 
 ### 5.3 가져오기
 
-`motions/1`을 읽어 제작 원본으로 올린다(탄젠트 모드는 `free`). Unity로 만든 `nod`·`bow`를 툴에서 열어 이어 만드는 길이고, 반대도 된다.
+`motions/2`(와 옛 `motions/1` — `mode`는 무시)를 읽어 제작 원본으로 올린다(탄젠트 모드는 `free`). Unity로 만든 `nod`·`bow`를 툴에서 열어 이어 만드는 길이고, 반대도 된다.
 
 ---
 

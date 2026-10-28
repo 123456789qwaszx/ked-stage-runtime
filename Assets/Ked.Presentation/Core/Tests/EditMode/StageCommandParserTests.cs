@@ -103,8 +103,8 @@ public class StageCommandParserTests
     [Test]
     public void motion은_저장소의_클립을_그대로_싣고_모르는_이름은_오류_후_아무것도_내지_않는다()
     {
-        const string json = @"{ ""schema"": ""motions/1"", ""motions"": [ { ""name"": ""nod"", ""rig"": ""character"", ""duration"": 0.6, ""end"": ""restore"",
-            ""channels"": [ { ""node"": ""CharacterPortrait_Track_Move_Y"", ""kind"": ""position"", ""mode"": ""relative"",
+        const string json = @"{ ""schema"": ""motions/2"", ""motions"": [ { ""name"": ""nod"", ""rig"": ""character"", ""duration"": 0.6, ""end"": ""restore"",
+            ""channels"": [ { ""node"": ""CharacterPortrait_Track_Move_Y"", ""kind"": ""position"",
             ""y"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 0.6, ""v"": 0 } ] } ] } ] }";
 
         StageCommandParser parser = new(null, null, null, MotionLibrary.Parse(json, "test"));
@@ -115,8 +115,15 @@ public class StageCommandParserTests
         Assert.AreEqual("c1", spec.slotKey);
         Assert.AreEqual("nod", spec.clip.Name);
         Assert.AreEqual(0.6f, spec.clip.Duration, 0f);
+        Assert.AreEqual(MotionChannelMode.Relative, spec.mode, "생략한 mode는 relative");
+
+        MotionCommandSpecCharR absolute = (MotionCommandSpecCharR)Parse(parser, Cmd("motion", "c1", "nod", "absolute"))[0];
+        Assert.AreEqual(MotionChannelMode.Absolute, absolute.mode);
 
         LogAssert.Expect(LogType.Error, new Regex("StageCommandParser.*Unknown motion"));
         Assert.IsEmpty(Parse(parser, Cmd("motion", "c1", "nope")), "기본 모션은 없다 — 아무것도 내지 않는다");
+
+        LogAssert.Expect(LogType.Error, new Regex("StageCommandParser.*mode"));
+        Assert.IsEmpty(Parse(parser, Cmd("motion", "c1", "nod", "offset")), "모르는 mode 낱말은 재생하지 않는다");
     }
 }
