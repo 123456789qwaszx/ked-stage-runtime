@@ -51,7 +51,6 @@ public class MotionLibraryTests
 
     [TestCase(Head + TrackX, "end")]
     [TestCase(Head + @"""end"": ""hold"", " + TrackX, "end")]
-    [TestCase(Head + @"""end"": ""restore"", " + TrackX, "restore")]
     [TestCase(Head + @"""end"": ""commit"", ""channels"": [ { ""node"": ""CharSlot_Track_X"", ""kind"": ""slide"", ""x"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 1, ""v"": 1 } ] } ] }", "kind")]
     [TestCase(Head + @"""end"": ""commit"", ""channels"": [ { ""node"": ""CharSlot_Track_Focus"", ""kind"": ""position"", ""x"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 1, ""v"": 1 } ] } ] }", "Track_Focus")]
     [TestCase(Head + @"""end"": ""commit"", ""channels"": [ { ""node"": ""CharSlot_Track_X"", ""kind"": ""position"", ""x"": [ { ""t"": 0, ""v"": 0 }, { ""t"": 0.5, ""v"": 1 } ] } ] }", "길이")]
@@ -76,6 +75,18 @@ public class MotionLibraryTests
         Assert.AreEqual(0, MotionLibrary.Parse(Doc(stray), "test", CharacterRigSchema.NodeIds()).Count);
 
         Assert.AreEqual(1, MotionLibrary.Parse(Doc(Nod), "test", CharacterRigSchema.NodeIds()).Count, "실제 스키마의 노드는 통과한다");
+    }
+
+    [Test]
+    public void restore인데_마지막_키가_남아도_읽힌다_값_규칙은_없고_재생이_시작값을_되쓴다()
+    {
+        // motions/1에서는 "restore 마지막 키 중립값" 규칙에 걸렸다. motions/2는 mode를 모르므로 값 규칙이 없다.
+        MotionLibrary library = MotionLibrary.Parse(Doc(Head + @"""end"": ""restore"", " + TrackX), "test");
+
+        Assert.AreEqual(1, library.Count);
+        Assert.IsTrue(library.TryGet("x", out MotionClip clip));
+        Assert.AreEqual(MotionEnd.Restore, clip.End);
+        Assert.AreEqual(1f, clip.Channels[0].X[1].Value, 0f);
     }
 
     [Test]
