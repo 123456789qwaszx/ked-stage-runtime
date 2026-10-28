@@ -118,8 +118,9 @@ namespace Ked.Presentation.Core.Tests.UnityParity
                 float t = clip.length * i / 32f;
                 clip.SampleAnimation(_rigRoot.gameObject, t);
 
-                Vec3 expectPos = MotionMath.Compose(pos, posStart, t);
-                Vec3 expectScale = MotionMath.Compose(scale, scaleStart, t);
+                // AnimationClip은 키 값을 그대로 쓴다 — absolute 렌즈로 합성한 값과 같아야 한다.
+                Vec3 expectPos = MotionMath.Compose(pos, MotionChannelMode.Absolute, posStart, t);
+                Vec3 expectScale = MotionMath.Compose(scale, MotionChannelMode.Absolute, scaleStart, t);
 
                 Assert.AreEqual(expectPos.X, node.anchoredPosition.x, Tolerance, $"x t={t}");
                 Assert.AreEqual(expectPos.Y, node.anchoredPosition.y, Tolerance, $"y t={t}");
