@@ -106,7 +106,7 @@ namespace Ked.Presentation.Core.Tests
                 {
                     new() { key = "class_day", width = 1026f, height = 580f },
                     new() { key = "3_한옥_에피소드시작", width = 1920f, height = 1080f },
-                    new() { key = "Class_Day", width = 100f, height = 100f }, // 대소문자가 다르면 다른 키
+                    new() { key = "Class_Day", width = 100f, height = 100f }, // 대소문자만 다르다 — 먼저 온 class_day가 이긴다
                 },
             };
         }
@@ -188,12 +188,14 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void 배경_키는_그대로다_대소문자를_가린다()
+        public void 배경_키는_대소문자를_가리지_않는다()
         {
-            // Resources 경로가 그렇다 — 초상 키(소문자화)와 다른 규약이라 따로 고정한다.
-            StageState state = Fold(Cmd("bg_spawn", "bg_main", "Class_Day"));
+            // Resources.Load가 그렇다 — 가리면 런타임은 그림을 찾아 크기를 맞추는데 폴드만 Unhandled가 된다.
+            StageState state = Fold(Cmd("bg_spawn", "bg_main", "CLASS_DAY"));
 
-            Assert.That(ImageWidthOf(state, "bg_main"), Is.EqualTo(1080f).Within(Eps), "100×100 엔트리");
+            Assert.That(ImageWidthOf(state, "bg_main"), Is.EqualTo(1080f * 1026f / 580f).Within(Eps),
+                "대소문자만 다른 두 엔트리 중 먼저 온 class_day");
+            Assert.That(state.Unhandled, Is.Empty);
         }
 
         [Test]
@@ -294,10 +296,10 @@ namespace Ked.Presentation.Core.Tests
         // ── 재선언 · 키 공간 ─────────────────────────────────────────
 
         [Test]
-        public void 배경_교체는_리그를_새로_세운다()
+        public void bg_spawn_재선언은_리그를_새로_세운다()
         {
-            // qwer_scene의 관용구: 같은 키로 bg_spawn을 다시 부르면 배경이 갈린다.
-            // 런타임은 새 리그를 짓고 옛 리그를 부순다 — 앞서 민 위치·배율은 남지 않는다.
+            // 같은 키로 bg_spawn을 다시 부르면 런타임은 새 리그를 짓고 옛 리그를 부순다 —
+            // 앞서 민 위치·배율은 남지 않고, 새 리그는 숨은 채 선다. (그림만 바꾸는 것은 bg_sprite다.)
             StageState state = Fold(
                 Cmd("bg_spawn", "bg0", "class_day"),
                 Cmd("bg_move", "bg0", "2u", "0u"),
@@ -311,6 +313,26 @@ namespace Ked.Presentation.Core.Tests
             Assert.That(state.GetAlpha("bg0/CharacterPortraitSprite_Root"), Is.EqualTo(0f),
                 "새 리그는 숨은 채 선다 — 다시 bg_fade_in으로 들인다");
             Assert.That(state.Unhandled, Is.Empty);
+        }
+
+        [Test]
+        public void 캐스팅된_캐릭터_키는_슬롯_키보다_먼저_풀린다()
+        {
+            // 런타임 CharacterRigTargetResolver와 같은 순서 — 캐릭터 키가 이긴다.
+            // 배경 키를 캐릭터 키와 같게 지으면 bg_* 명령이 그 캐릭터의 슬롯으로 간다(런타임은 세울 때 경고한다).
+            StageState state = Fold(
+                Cmd("slot", "s1"),
+                Cmd("cast", "s1", "tyrant"),
+                Cmd("fade_in", "s1"),
+                Cmd("bg_spawn", "tyrant", "class_day"),
+                Cmd("bg_fade_in", "tyrant"),
+                Cmd("fade_out", "tyrant"));
+
+            Assert.That(state.HasSlot("tyrant"), Is.True, "슬롯은 그 키 그대로 선다");
+            Assert.That(state.GetAlpha("s1/CharacterPortraitSprite_Root"), Is.EqualTo(0f),
+                "'tyrant'는 캐릭터 키로 풀려 s1에 닿는다 — bg_fade_in이 s1을 켜고 fade_out이 끈다");
+            Assert.That(state.GetAlpha("tyrant/CharacterPortraitSprite_Root"), Is.EqualTo(0f),
+                "배경 슬롯에는 아무 명령도 닿지 않았다 — 숨은 그대로");
         }
 
         [Test]

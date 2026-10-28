@@ -456,7 +456,8 @@ public static class PresentationTuningExporter
                 "배경 사이징 폴드가 전부 Unhandled가 된다.");
         }
 
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        // Resources.Load는 대소문자를 가리지 않는다 — 대소문자만 다른 두 에셋은 같은 키로 부딪친다.
+        HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
         string marker = "/Resources/" + ResourcesSpriteResolver.BackgroundsRoot + "/";
 
         foreach (Sprite sprite in sprites ?? Array.Empty<Sprite>())
@@ -472,10 +473,11 @@ public static class PresentationTuningExporter
 
             string key = Path.ChangeExtension(assetPath.Substring(at + marker.Length), null);
 
-            // 한 텍스처에 스프라이트가 여럿이면 Resources.Load<Sprite>(키)는 첫 것을 준다 — 덤프도 첫 것만.
+            // 한 텍스처에 스프라이트가 여럿이거나(Multiple 모드) 대소문자만 다른 에셋이 있으면
+            // Resources.Load<Sprite>(키)는 하나만 준다 — 덤프도 첫 것만 내고 경고한다.
             if (!seen.Add(key))
             {
-                warnings.Add($"배경 치수: '{key}'에 스프라이트가 여럿이다(Multiple 모드?). 첫 것만 냈다.");
+                warnings.Add($"배경 치수: 키 '{key}'가 겹친다(Multiple 스프라이트이거나 대소문자만 다른 에셋). 첫 것만 냈다.");
                 continue;
             }
 

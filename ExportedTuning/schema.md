@@ -272,7 +272,7 @@ MonoBehaviour.entries[] : { key(캐릭터), offset(px, Vec2), visualScale(무단
 | 필드 | 뜻 |
 |---|---|
 | `sourceFolder` | 읽은 Resources 하위 폴더 (재현 정보) |
-| `entries[].key` | `Backgrounds/` 아래 **상대 경로, 확장자 없이** — 런타임이 `Resources.Load`에 넘기는 그 문자열. 정규화 없음(대소문자가 다르면 다른 키). 하위 폴더도 그대로(`ep1/hall`) |
+| `entries[].key` | `Backgrounds/` 아래 **상대 경로, 확장자 없이** — 런타임이 `Resources.Load`에 넘기는 그 문자열. 하위 폴더도 그대로(`ep1/hall`). 조회는 **대소문자를 가리지 않는다**(`Resources.Load`와 같다) — 대소문자만 다른 두 에셋은 익스포터가 경고하고 첫 것만 낸다 |
 | `entries[].width` · `.height` | `sprite.rect`의 픽셀 크기. 임포터 `maxTextureSize`(2048)에 걸린 그림은 **줄어든 크기**가 나온다 — 종횡비는 같다 |
 
 없는 키는 사이징만 `Unhandled`로 남는다(슬롯 스폰·가시성은 접힌다 — "슬롯을 못 세웠다"는 거짓말을 하지 않는다).

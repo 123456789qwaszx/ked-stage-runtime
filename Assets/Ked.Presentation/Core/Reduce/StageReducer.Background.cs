@@ -31,7 +31,8 @@ namespace Ked.Presentation.Core
         /// **배역 있는 슬롯을 덮으면 배역을 푼다.** 배경은 캐스팅하지 않은 슬롯이라는 정의를 지키려는 것이다 —
         /// 배역이 남으면 `fade_in harin`이 배경을 페이드하고, 배역 기반 축(focus_on)이 배경을 초점면에 넣는다.
         /// 런타임 SetupCharRigCommand(asBackground)도 같은 자리에서 배역을 풀고 경고를 남긴다.
-        /// 같은 키의 배경을 다시 세우는 것(배경 교체)은 SpawnSlot의 재선언 규칙을 탄다 — 노드·α가 스키마로 돌아간다.
+        /// 그림만 바꾸려면 `bg_sprite`를 쓴다. 같은 키로 `bg_spawn`을 다시 부르면 SpawnSlot의 재선언 규칙을 탄다 —
+        /// 새 리그가 숨은 채 서므로(노드·α가 스키마로) 다시 `bg_fade_in`해야 보인다.
         /// </summary>
         private static bool ApplyBackgroundSpawn(
             StageState state, in StageCommand cmd, StageReducerTuning tuning,
