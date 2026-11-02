@@ -10,7 +10,7 @@ namespace Ked.Presentation.Core
     /// (초상 DB가 아니라 background-dimensions.json).
     ///
     /// 파서(StageCommandParser.Background)와의 대응(PLAN_background-as-slot "명령 대응표"):
-    ///   bg_spawn / bg_slotNN → SetupCharRig(far, 배경) + 스프라이트            → 여기: SpawnSlot + 배역 풀기 + 사이징 (숨은 채)
+    ///   bg_spawn             → SetupCharRig(stage00 · far 생략값, 배경) + 스프라이트 → 여기: SpawnSlot + 배역 풀기 + 사이징 (숨은 채)
     ///   bg_sprite            → 스프라이트 키 Spec(HeightFit)                 → 사이징
     ///   bg_fade_in/out       → FadeIn/Out(CharacterPortraitSprite_Root)       → ApplyFade (디스패치에서 직접)
     ///   bg_move              → MoveBy(CharSlot_Track)                         → ApplyMoveBy (디스패치에서 직접)
@@ -19,7 +19,7 @@ namespace Ked.Presentation.Core
     public static partial class StageReducer
     {
         /// <summary>
-        /// bg_spawn / bg_slotNN (rigKey, spriteKey[, layer]).
+        /// bg_spawn (rigKey, spriteKey[, stage[, layer]]).
         ///
         /// 슬롯을 세우고 스프라이트 크기를 맞춘다. **숨은 채 선다**(스프라이트 루트 α 0) — 캐릭터 slot과 같다.
         /// 대본은 bg_fade_in으로 들인다. 옛 배경 리그는 세우면 바로 보여서, 대본마다 뒤에 쓴 bg_fade_in 24fr이

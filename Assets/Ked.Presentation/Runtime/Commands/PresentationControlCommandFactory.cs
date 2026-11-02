@@ -1,7 +1,6 @@
 public sealed class PresentationControlCommandFactory : INodeCommandFactory
 {
     private readonly PresentationStage _stage;
-    private readonly IUIThemePatchPort _uiThemePatch;
     
     private readonly ITimeSource _time;
     private readonly ISignalBus _signal;
@@ -9,13 +8,11 @@ public sealed class PresentationControlCommandFactory : INodeCommandFactory
     
     public PresentationControlCommandFactory(
         PresentationStage stage,
-        IUIThemePatchPort uiThemePatch,
         ITimeSource time, 
         ISignalBus signal, 
         ISignalLatch latch)
     {
         _stage = stage;
-        _uiThemePatch = uiThemePatch;
         _time = time;
         _signal = signal;
         _latch = latch;
@@ -27,8 +24,6 @@ public sealed class PresentationControlCommandFactory : INodeCommandFactory
         {
             null => null,
 
-            UIPatchCommandSpec s => new UIPatchCommand(_uiThemePatch, s),
-            
             // ActorAlias
             SetPresentationActorAliasCommandSpec s => new SetPresentationActorAliasCommand(_stage, s),
             

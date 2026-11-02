@@ -201,7 +201,7 @@ coc = saturate(|depthScale_char − depthScale_focus| × falloff) × maxBlur
 
 ### ⚠ 블러를 쓰는 커맨드가 셋이다
 
-`focus_on` · `screen_blur` · `char_visual_focus/defocus`(프리셋의 `blur` 필드)가 모두
+`focus_on` · `screen_blur` · `char_visual` focus/defocus(프리셋의 `blur` 필드)가 모두
 같은 `_BlurAmount`를 쓴다. 서로 죽이지 않으므로 **동시에 걸면 매 프레임 싸운다.**
 
 재발행만은 막아 두었다 — 트윈 타깃을 커맨드 인스턴스가 아니라 공유 스코프로 잡는다:
@@ -210,7 +210,7 @@ coc = saturate(|depthScale_char − depthScale_focus| × falloff) × maxBlur
 |---|---|
 | `focus_on` | `CharacterRigRegistry` (모든 캐릭터) |
 | `screen_blur` | 레이어의 content root |
-| `char_visual_*` | 해당 리그의 컨트롤러 |
+| `char_visual` | 해당 리그의 컨트롤러 |
 
 같은 커맨드를 다시 걸면 이전 트윈이 죽는다. **다른 커맨드끼리는 여전히 겹칠 수 있다** —
 저작에서 한 번에 하나만 쓰는 것이 전제다.

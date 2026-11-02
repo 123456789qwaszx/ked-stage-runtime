@@ -60,6 +60,19 @@ public sealed partial class StageCommandParser
     private void Emit(CommandSpecBase spec) => _output.Add(spec);
 
     // 숫자 인자. 비면 fallback(생략), 못 읽으면 경고 + fallback — 조용히 0이 되지 않는다.
+    // 화면 지점 — 모르는 이름이면 가운데로 가되 소리를 낸다(전에는 조용히 가운데였다).
+    // place의 지점 이름이 커맨드 이름에서 인자로 내려오면서(2026-11-03) 오타가 곧 엉뚱한 자리라서다.
+    private static ScreenFocusPoint ParseScreenPoint(string commandName, string token)
+    {
+        if (ScreenFocusPointParser.TryParse(token, out ScreenFocusPoint point))
+            return point;
+
+        Debug.LogWarning(
+            $"[StageCommandParser] <<{commandName}>> 화면 지점 '{token}'을 모른다. center로 간다.");
+
+        return ScreenFocusPoint.Center;
+    }
+
     private static float Float(StageCommand c, int index, float fallback)
     {
         string token = c.Arg(index);

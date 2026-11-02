@@ -242,7 +242,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
         {
             CharacterPlacementTargetLedger ledger = new();
 
-            Vector2 desired = new(-460.8f, 172.8f);   // place_tl 상당
+            Vector2 desired = new(-460.8f, 172.8f);   // place … tl 상당
 
             Vector2 expected = LegacySolvePlacement(ledger, BustOffset, desired);
             Vector2 actual = CoreSolvePlacement(ledger, BustOffset, desired);
@@ -256,7 +256,7 @@ namespace Ked.Presentation.Core.Tests.UnityParity
             CharacterPlacementTargetLedger ledger = new();
             ledger.PublishLocalScale(DepthScale, new Vector2(1.58f, 1.58f));
 
-            Vector2 desired = new(268.8f, -172.8f);   // place_br 상당
+            Vector2 desired = new(268.8f, -172.8f);   // place … br 상당
 
             Vector2 expected = LegacySolvePlacement(ledger, BustOffset, desired);
             Vector2 actual = CoreSolvePlacement(ledger, BustOffset, desired);

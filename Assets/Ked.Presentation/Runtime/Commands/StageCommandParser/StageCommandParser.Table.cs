@@ -9,15 +9,16 @@ public sealed partial class StageCommandParser
     // ── 커맨드 표 — 이름 · 인자 자리 · 생략값이 전부 여기 있다 ───────────────
     // 생략값은 핸들러 시그니처가 아니라 이 표가 갖는다(한 곳). 브리지의 Yarn 등록은
     // 이름과 인자 수만 안다 — 뜻은 여기서 정해진다.
+    //
+    // 정본만 둔다(2026-11-03). 같은 일을 인자 하나만 고정해 다시 부르는 이름(slotNN · char_to_sN · bg_slotNN ·
+    // screen_blur_sN · place_* · size_<라벨> · char_visual_<프리셋> · tx_<프리셋> · <<Nfr>>)은 걷었다 —
+    // 대본은 저작 툴(ked-story-compositor)이 내고, 툴은 정본만 낸다. 예외는 place_left · place_center ·
+    // place_right 셋이다(소유자 결정). 변형은 이름이 아니라 인자로 받는다.
     private static readonly Dictionary<string, Handler> Table = new(StringComparer.Ordinal)
     {
-        ["pause"] = (p, c) => p.EnqueueWaitSpec(Float(c, 0, 0.18f)),
-        ["ui_patch"] = (p, c) => p.EnqueueUIPatchSpec(c.Arg(0, "default")),
+        ["pause"] = (p, c) => p.EnqueueWaitSpec(c.Arg(0)),
         ["actor"] = (p, c) => p.EnqueuePresentationActorAliasSpec(c.Arg(0), c.Arg(1)),
         ["slot"] = (p, c) => p.EnqueueSetupCharRigSpec(c.Arg(0), c.Arg(1, "stage00"), c.Arg(2, "mid")),
-        ["slot00"] = (p, c) => p.EnqueueSetupCharRigStage00Spec(c.Arg(0), c.Arg(1, "mid")),
-        ["slot01"] = (p, c) => p.EnqueueSetupCharRigStage01Spec(c.Arg(0), c.Arg(1, "mid")),
-        ["slot02"] = (p, c) => p.EnqueueSetupCharRigStage02Spec(c.Arg(0), c.Arg(1, "mid")),
         ["cast"] = (p, c) => p.EnqueueCastCharacterSpec(c.Arg(0), c.Arg(1), c.Arg(2, "a"), c.Arg(3, "1")),
         ["pose"] = (p, c) => p.EnqueueSetPortraitPoseSpec(c.Arg(0), c.Arg(1)),
         ["face"] = (p, c) => p.EnqueueSetPortraitFaceSpec(c.Arg(0), c.Arg(1)),
@@ -34,9 +35,6 @@ public sealed partial class StageCommandParser
         ["sibling_front"] = (p, c) => p.EnqueueCharacterSiblingFrontSpec(c.Arg(0)),
         ["sibling_back"] = (p, c) => p.EnqueueCharacterSiblingBackSpec(c.Arg(0)),
         ["char_to"] = (p, c) => p.EnqueueMoveCharacterRigToStageLayerSpec(c.Arg(0), c.Arg(1, "stage00"), c.Arg(2, "mid")),
-        ["char_to_s0"] = (p, c) => p.EnqueueMoveCharacterRigToStage00LayerSpec(c.Arg(0), c.Arg(1, "mid")),
-        ["char_to_s1"] = (p, c) => p.EnqueueMoveCharacterRigToStage01LayerSpec(c.Arg(0), c.Arg(1, "mid")),
-        ["char_to_s2"] = (p, c) => p.EnqueueMoveCharacterRigToStage02LayerSpec(c.Arg(0), c.Arg(1, "mid")),
         ["shot_focus_to"] = (p, c) => p.EnqueueShotZoomFocusSpec(c.Arg(0), c.Arg(1, "body"), c.Arg(2, "center"), Float(c, 3, 2.5f), c.Arg(4, "1.2s"), c.Arg(5, "")),
         ["shot_to"] = (p, c) => p.EnqueueShotToSpec(Float(c, 0, 1f), c.Arg(1, "2.5u"), c.Arg(2, "0u"), c.Arg(3, "0.45s"), c.Arg(4, "")),
         ["shot_zoom"] = (p, c) => p.EnqueueShotZoomSpec(Float(c, 0, 1f), c.Arg(1, "0.45s"), c.Arg(2, "")),
@@ -51,22 +49,7 @@ public sealed partial class StageCommandParser
         ["place_left"] = (p, c) => p.EnqueueFocusToLeftSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
         ["place_center"] = (p, c) => p.EnqueueFocusToCenterSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
         ["place_right"] = (p, c) => p.EnqueueFocusToRightSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_tl"] = (p, c) => p.EnqueueFocusToTopLeftSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_top"] = (p, c) => p.EnqueueFocusToTopSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_tr"] = (p, c) => p.EnqueueFocusToTopRightSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_bl"] = (p, c) => p.EnqueueFocusToBottomLeftSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_bottom"] = (p, c) => p.EnqueueFocusToBottomSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_br"] = (p, c) => p.EnqueueFocusToBottomRightSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_inner_tl"] = (p, c) => p.EnqueueFocusToInnerTopLeftSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_inner_tr"] = (p, c) => p.EnqueueFocusToInnerTopRightSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_inner_bl"] = (p, c) => p.EnqueueFocusToInnerBottomLeftSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
-        ["place_inner_br"] = (p, c) => p.EnqueueFocusToInnerBottomRightSpec(c.Arg(0), c.Arg(1, DefaultFocusPlacementFocusToken), c.Arg(2, DefaultFocusPlacementDurationToken), c.Arg(3, "")),
         ["size"] = (p, c) => p.EnqueueDepthAtPresetSpec(c.Arg(0), c.Arg(1), c.Arg(2, DefaultFocusDepthPresetToken), c.Arg(3, DefaultFocusDepthDurationToken), c.Arg(4, "")),
-        ["size_far"] = (p, c) => p.EnqueueDepthAtFarSpec(c.Arg(0), c.Arg(1, DefaultFocusDepthPresetToken), c.Arg(2, DefaultFocusDepthDurationToken), c.Arg(3, "")),
-        ["size_back"] = (p, c) => p.EnqueueDepthAtBackSpec(c.Arg(0), c.Arg(1, DefaultFocusDepthPresetToken), c.Arg(2, DefaultFocusDepthDurationToken), c.Arg(3, "")),
-        ["size_mid"] = (p, c) => p.EnqueueDepthAtMidSpec(c.Arg(0), c.Arg(1, DefaultFocusDepthPresetToken), c.Arg(2, DefaultFocusDepthDurationToken), c.Arg(3, "")),
-        ["size_front"] = (p, c) => p.EnqueueDepthAtFrontSpec(c.Arg(0), c.Arg(1, DefaultFocusDepthPresetToken), c.Arg(2, DefaultFocusDepthDurationToken), c.Arg(3, "")),
-        ["size_close"] = (p, c) => p.EnqueueDepthAtCloseSpec(c.Arg(0), c.Arg(1, DefaultFocusDepthPresetToken), c.Arg(2, DefaultFocusDepthDurationToken), c.Arg(3, "")),
         ["size_reset"] = (p, c) => p.EnqueueDepthResetSpec(c.Arg(0), Float(c, 1, 0f), c.Arg(2, "")),
         ["fade_in"] = (p, c) => p.EnqueueFadeInSpec(c.Arg(0), c.Arg(1, "14fr")),
         ["fade_out"] = (p, c) => p.EnqueueFadeOutSpec(c.Arg(0), c.Arg(1, "14fr")),
@@ -76,41 +59,14 @@ public sealed partial class StageCommandParser
         ["char_scale_to"] = (p, c) => p.EnqueueScaleSpec(c.Arg(0), Float(c, 1, 0f), c.Arg(2, "10fr"), c.Arg(3, "")),
         ["char_rotate_to"] = (p, c) => p.EnqueuePortraitRotateToSpec(c.Arg(0), Float(c, 1, 0f), c.Arg(2, "10fr"), c.Arg(3, "")),
         ["char_visual"] = (p, c) => p.EnqueueCharVisualPresetSpec(c.Arg(0), c.Arg(1), Float(c, 2, 1f), c.Arg(3, "6fr")),
-        ["char_visual_focus"] = (p, c) => p.EnqueueCharFocusSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "10fr")),
-        ["char_visual_defocus"] = (p, c) => p.EnqueueCharDefocusSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "17fr")),
-        ["char_visual_dim"] = (p, c) => p.EnqueueCharDimSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
-        ["char_visual_silhouette"] = (p, c) => p.EnqueueCharSilhouetteSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
-        ["char_visual_inner_rim"] = (p, c) => p.EnqueueCharInnerRimSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
-        ["char_visual_outer_rim"] = (p, c) => p.EnqueueCharOuterRimSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
-        ["char_visual_clear"] = (p, c) => p.EnqueueCharRigVisualClearSpec(c.Arg(0), c.Arg(1, "6fr")),
-        // 배경 = 캐스팅하지 않은 캐릭터 슬롯(StageCommandParser.Background). bg_place·bg_size는 지운 어휘다.
-        ["bg_spawn"] = (p, c) => p.EnqueueSpawnBackgroundSpec(c.Arg(0), c.Arg(1)),
-        ["bg_slot00"] = (p, c) => p.EnqueueSpawnBackgroundStage00Spec(c.Arg(0), c.Arg(1), c.Arg(2, "far")),
-        ["bg_slot01"] = (p, c) => p.EnqueueSpawnBackgroundStage01Spec(c.Arg(0), c.Arg(1), c.Arg(2, "far")),
-        ["bg_slot02"] = (p, c) => p.EnqueueSpawnBackgroundStage02Spec(c.Arg(0), c.Arg(1), c.Arg(2, "far")),
+        // 배경 = 캐스팅하지 않은 캐릭터 슬롯(StageCommandParser.Background). bg_place·bg_size·bg_slotNN은 지운 어휘다.
+        ["bg_spawn"] = (p, c) => p.EnqueueSpawnBackgroundSpec(c.Arg(0), c.Arg(1), c.Arg(2, "stage00"), c.Arg(3, "far")),
         ["bg_sprite"] = (p, c) => p.EnqueueSetBackgroundSpriteSpec(c.Arg(0), c.Arg(1, "")),
         ["bg_fade_in"] = (p, c) => p.EnqueueFadeInBackgroundDslSpec(c.Arg(0), c.Arg(1, "10fr")),
         ["bg_fade_out"] = (p, c) => p.EnqueueFadeOutBackgroundDslSpec(c.Arg(0), c.Arg(1, "10fr")),
         ["bg_move"] = (p, c) => p.EnqueueMoveBackgroundDslSpec(c.Arg(0), c.Arg(1), c.Arg(2), c.Arg(3, "10fr")),
         ["bg_scale"] = (p, c) => p.EnqueueScaleBackgroundDslSpec(c.Arg(0), Float(c, 1, 0f), c.Arg(2, "10fr")),
-        ["tx_slant_in"] = (p, c) => p.EnqueueSlantedMaskCutInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_slant_out"] = (p, c) => p.EnqueueSlantedMaskCutOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_hstrip_open"] = (p, c) => p.EnqueueHorizontalStripOpenInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_hstrip_close"] = (p, c) => p.EnqueueHorizontalStripCloseOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_hstrip_in"] = (p, c) => p.EnqueueHorizontalStripCutInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_hstrip_out"] = (p, c) => p.EnqueueHorizontalStripCutOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_vstrip_open"] = (p, c) => p.EnqueueVerticalStripOpenInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_vstrip_close"] = (p, c) => p.EnqueueVerticalStripCloseOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_vstrip_in"] = (p, c) => p.EnqueueVerticalStripCutInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_vstrip_out"] = (p, c) => p.EnqueueVerticalStripCutOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_band_in"] = (p, c) => p.EnqueueDiagonalBandCutInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_band_out"] = (p, c) => p.EnqueueDiagonalBandCutOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_iris_in"] = (p, c) => p.EnqueueCircleIrisInSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_iris_out"] = (p, c) => p.EnqueueCircleIrisOutSpec(c.Arg(0, "01"), c.Arg(1, "")),
-        ["tx_daze_in"] = (p, c) => p.EnqueueDazeFadeCloseSpec(c.Arg(0, "00"), c.Arg(1, "")),
-        ["tx_daze_out"] = (p, c) => p.EnqueueTransitionOutDazeFadeSpec(c.Arg(0, "00"), c.Arg(1, "")),
-        ["tx_strip_in"] = (p, c) => p.EnqueueVerticalStripCoverSpec(c.Arg(0, "00"), c.Arg(1, "")),
-        ["tx_strip_out"] = (p, c) => p.EnqueueTransitionOutStripSpec(c.Arg(0, "00"), c.Arg(1, "")),
+        ["tx"] = (p, c) => p.EnqueueStageMaskMotionPresetSpec(c.Arg(0), c.Arg(1, "stage01"), c.Arg(2, "")),
         ["tx_stage_mask_clear"] = (p, c) => p.EnqueueStageMaskClearSpec(),
         ["bgm"] = (p, c) => p.EnqueuePlayBgmSpec(c.Arg(0), c.Arg(1, "1s")),
         ["stop_bgm"] = (p, c) => p.EnqueueStopBgmSpec(c.Arg(0, "1s")),
@@ -126,21 +82,10 @@ public sealed partial class StageCommandParser
         ["screen_noise_clear"] = (p, c) => p.EnqueueScreenNoiseClearSpec(c.Arg(0, "0.35s")),
         ["focus_on"] = (p, c) => p.EnqueueDepthFocusOnSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "0.4s")),
         ["focus_clear"] = (p, c) => p.EnqueueDepthFocusClearSpec(c.Arg(0, "0.4s")),
-        ["screen_blur"] = (p, c) => p.EnqueueStage00LayerBlurSpec(c.Arg(0, "mid"), Float(c, 1, 1f)),
-        ["screen_blur_s1"] = (p, c) => p.EnqueueStage01LayerBlurSpec(c.Arg(0, "mid"), Float(c, 1, 1f)),
-        ["screen_blur_s2"] = (p, c) => p.EnqueueStage02LayerBlurSpec(c.Arg(0, "mid"), Float(c, 1, 1f)),
+        ["screen_blur"] = (p, c) => p.EnqueueLayerBlurSpec(c.Arg(2, "stage00"), c.Arg(0, "mid"), Float(c, 1, 1f)),
         ["screen_blur_reset"] = (p, c) => p.EnqueueStageLayerBlurClearSpec(),
     };
 
-    static StageCommandParser()
-    {
-        for (int frame = 1; frame <= FramePauseAliasMaxFrame; frame++)
-        {
-            float seconds = YarnDurationParser.FramesToSeconds(frame);
-            Table[$"{frame}fr"] = (p, c) => p.EnqueueWaitSpec(seconds);
-        }
-    }
-
-    /// <summary>이 파서가 아는 커맨드 이름 전부(프레임 별칭 포함). 브리지가 Yarn 등록에 쓴다.</summary>
+    /// <summary>이 파서가 아는 커맨드 이름 전부.</summary>
     public static IEnumerable<string> CommandNames => Table.Keys;
 }

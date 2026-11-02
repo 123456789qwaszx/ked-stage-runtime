@@ -8,35 +8,24 @@ using UnityEngine;
 /// 대본·문서·외부 도구는 그대로이고, "이건 배경"이라는 저작 의도가 대본에 남는다.
 /// 코어 `StageReducer.Background.cs`가 같은 대응으로 접는다. 표적 노드를 바꾸면 거기도 함께 바꾼다.
 ///
-///   bg_spawn / bg_slotNN  →  SetupCharRig(far, asBackground) + SetSprite(키)
+///   bg_spawn [stage] [layer] →  SetupCharRig(stage00 · far 생략값, asBackground) + SetSprite(키)
 ///                            (캐릭터 slot처럼 숨은 채 선다 — bg_fade_in으로 들인다. 배역 있는 슬롯을 덮으면 배역을 푼다)
 ///   bg_sprite             →  SetSprite(키), HeightFitPreserveAspect, 레이캐스트 끔
 ///   bg_fade_in / out      →  FadeIn/Out  → CharacterPortraitSprite_Root
 ///   bg_move               →  MoveBy      → CharSlot_Track            (move_by와 같은 축)
 ///   bg_scale              →  ScaleTo     → CharacterPortrait_ActingScale (가운데 피벗 — CharSlot_Scale은 발 피벗이다)
 ///
-/// 지운 어휘: bg_size(쓰임이 값 1 하나였고 bg_scale과 같은 노드를 잡았다) · bg_place(넉 달째 깨져 있었고 쓰임 0).
+/// 지운 어휘: bg_size(쓰임이 값 1 하나였고 bg_scale과 같은 노드를 잡았다) · bg_place(넉 달째 깨져 있었고 쓰임 0) ·
+/// bg_slot00/01/02(bg_spawn의 무대 · 층 인자로 접었다, 2026-11-03).
 /// bg_sprite가 받고 버리던 셋째 인자(layerKey)도 뺐다.
 /// </summary>
 public sealed partial class StageCommandParser
 {
     private const float BackgroundDefaultDurationSeconds = 0.4f;
 
-    private void EnqueueSpawnBackgroundSpec(string rigKey, string spriteKey)
+    private void EnqueueSpawnBackgroundSpec(string rigKey, string spriteKey, string stageKey, string layerKey)
         => EnqueueSpawnBackgroundAtDepthSpec(
-            rigKey, spriteKey, PresentationStageKey.Stage00, PresentationDepthLayerKey.Far);
-
-    private void EnqueueSpawnBackgroundStage00Spec(string rigKey, string spriteKey, string layerKey)
-        => EnqueueSpawnBackgroundAtDepthSpec(
-            rigKey, spriteKey, PresentationStageKey.Stage00, PresentationDepthLayerKeyParser.Parse(layerKey));
-
-    private void EnqueueSpawnBackgroundStage01Spec(string rigKey, string spriteKey, string layerKey)
-        => EnqueueSpawnBackgroundAtDepthSpec(
-            rigKey, spriteKey, PresentationStageKey.Stage01, PresentationDepthLayerKeyParser.Parse(layerKey));
-
-    private void EnqueueSpawnBackgroundStage02Spec(string rigKey, string spriteKey, string layerKey)
-        => EnqueueSpawnBackgroundAtDepthSpec(
-            rigKey, spriteKey, PresentationStageKey.Stage02, PresentationDepthLayerKeyParser.Parse(layerKey));
+            rigKey, spriteKey, PresentationStageKeyParser.Parse(stageKey), PresentationDepthLayerKeyParser.Parse(layerKey));
 
     private void EnqueueSpawnBackgroundAtDepthSpec(
         string rigKey,

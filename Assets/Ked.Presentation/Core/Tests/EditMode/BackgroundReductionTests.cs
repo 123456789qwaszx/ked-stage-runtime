@@ -147,11 +147,11 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void bg_slotNN은_스테이지를_접미사로_레이어를_셋째_인자로_받는다()
+        public void bg_spawn은_셋째_넷째_인자로_무대와_층을_받는다()
         {
             StageState state = Fold(
-                Cmd("bg_slot01", "bg_a", "class_day"),
-                Cmd("bg_slot02", "bg_b", "class_day", "mid"));
+                Cmd("bg_spawn", "bg_a", "class_day", "stage01"),
+                Cmd("bg_spawn", "bg_b", "class_day", "stage02", "mid"));
 
             state.TryGetAttachment("bg_a", out SlotAttachment a);
             Assert.That(a.StageKey, Is.EqualTo("stage01"));

@@ -23,7 +23,7 @@ public sealed class SetupCharRigCommandSpec : CommandSpecBase
     public string rigRootName = "CharacterRig";
 
     [Header("Background")]
-    [Tooltip("배경으로 세운다(bg_spawn·bg_slotNN). 배경은 캐스팅하지 않은 슬롯이다 — " +
+    [Tooltip("배경으로 세운다(bg_spawn). 배경은 캐스팅하지 않은 슬롯이다 — " +
              "배역 있는 슬롯을 덮으면 배역을 풀고 경고한다.")]
     public bool asBackground;
 

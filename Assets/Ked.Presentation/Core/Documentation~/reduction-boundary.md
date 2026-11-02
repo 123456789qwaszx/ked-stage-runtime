@@ -185,9 +185,9 @@ yarn 4묶음 기준. "이관 안 함"은 **조용히 버린 것이 아니라 판
 | `scale_by` · `scale_reset` | `ScaleToCommandSpecCharR` | 동일 |
 | `rotate_by` · `rotate_reset` | `RotateToCommandSpecCharR` | `RotateToReduction` |
 | `sibling_front` · `sibling_back` | — | **이관 안 함** (아래) |
-| `char_to` · `char_to_s0/s1/s2` | — | **이관 안 함** (아래) |
+| `char_to` | — | **이관 안 함** (아래) — 무대를 이름에 박은 `char_to_s0/s1/s2`는 2026-11-03에 걷었다 |
 
-**구조 커맨드 6종을 이관하지 않는 이유: 변환부가 항등이다.**
+**구조 커맨드(`sibling_front` · `sibling_back` · `char_to`)를 이관하지 않는 이유: 변환부가 항등이다.**
 스펙 값(stage·layer·순서 모드)이 곧 목표이고 본문은 유니티 구조 조작(`SetParent` ·
 `SetSiblingIndex`)뿐이라 **코어로 옮길 계산이 없다.**
 이 구조 축(리그가 어느 스테이지/레이어에 어떤 순서로 붙는가)은 무대 상태 조립 때

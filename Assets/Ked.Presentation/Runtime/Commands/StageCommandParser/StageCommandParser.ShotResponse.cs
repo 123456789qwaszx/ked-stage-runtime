@@ -11,8 +11,7 @@ public sealed partial class StageCommandParser
     {
         CharacterFocusPresetParser.TryParse(focusName, out CharacterFocusPreset focusPreset);
 
-        if (!ScreenFocusPointParser.TryParse(screenPointName, out ScreenFocusPoint screenPoint))
-            screenPoint = ScreenFocusPoint.Center;
+        ScreenFocusPoint screenPoint = ParseScreenPoint("shot_focus_to", screenPointName);
 
         EaseSelection ease = ResolveEase(easeToken);
 

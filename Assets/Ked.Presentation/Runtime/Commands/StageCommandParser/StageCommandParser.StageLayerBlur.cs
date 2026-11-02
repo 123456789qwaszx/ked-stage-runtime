@@ -21,20 +21,14 @@ public sealed partial class StageCommandParser
         PresentationDepthLayerKey.Close,
     };
 
-    private void EnqueueStage00LayerBlurSpec(string layerKey, float amount)
-        => EnqueueLayerBlurSpec(PresentationStageKey.Stage00, layerKey, amount);
-
-    private void EnqueueStage01LayerBlurSpec(string layerKey, float amount)
-        => EnqueueLayerBlurSpec(PresentationStageKey.Stage01, layerKey, amount);
-
-    private void EnqueueStage02LayerBlurSpec(string layerKey, float amount)
-        => EnqueueLayerBlurSpec(PresentationStageKey.Stage02, layerKey, amount);
-
+    // <<screen_blur [층=mid] [양=1] [무대=stage00]>> — 옛 screen_blur_s1/_s2는 무대 인자로 접혔다(2026-11-03).
     private void EnqueueLayerBlurSpec(
-        PresentationStageKey stage,
+        string stageKey,
         string layerKey,
         float amount)
     {
+        PresentationStageKey stage = PresentationStageKeyParser.Parse(stageKey);
+
         if (!PresentationCommandKeyParser.TryParseDepthLayerKey(
                 layerKey,
                 out PresentationDepthLayerKey layer))

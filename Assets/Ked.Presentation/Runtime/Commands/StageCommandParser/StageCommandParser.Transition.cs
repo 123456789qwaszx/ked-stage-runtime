@@ -1,12 +1,24 @@
 using Ked.Presentation.Core;
+using UnityEngine;
+
 public sealed partial class StageCommandParser
 {
-    // durationToken이 빈 문자열이면 override 없음 - 프리셋 자체 duration을 사용.
+    // <<tx 프리셋 [무대=stage01] [시간]>> — 프리셋은 StageMaskMotionPresetDB의 키
+    // (slant_in/out · hstrip_open/close/in/out · vstrip_open/close/in/out · band_in/out · iris_in/out ·
+    // shutter_close/open · daze_close/open · strip_cover/clear). 옛 tx_<이름> 18개는 이 한 줄로 접혔다(2026-11-03).
+    // 시간이 비면 override 없음 — 프리셋 자체 duration을 쓴다.
     private void EnqueueStageMaskMotionPresetSpec(
         string presetKey,
-        string stage = "01",
-        string durationToken = "")
-        => Emit(new StageMaskMotionCommandSpec
+        string stage,
+        string durationToken)
+    {
+        if (string.IsNullOrWhiteSpace(presetKey))
+        {
+            Debug.LogWarning("[StageCommandParser] <<tx>>에 프리셋이 없다. 건너뛴다.");
+            return;
+        }
+
+        Emit(new StageMaskMotionCommandSpec
         {
             stage = PresentationStageKeyParser.Parse(stage),
             presetKey = StageMaskMotionPresetDBSO.NormalizeKey(presetKey),
@@ -14,62 +26,8 @@ public sealed partial class StageCommandParser
                 ? -1f
                 : YarnDurationParser.Parse(durationToken)
         });
+    }
 
-    private void EnqueueSlantedMaskCutInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("slant_in", stage, durationToken);
-
-    private void EnqueueSlantedMaskCutOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("slant_out", stage, durationToken);
-
-    private void EnqueueHorizontalStripOpenInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("hstrip_open", stage, durationToken);
-
-    private void EnqueueHorizontalStripCloseOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("hstrip_close", stage, durationToken);
-
-    private void EnqueueHorizontalStripCutInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("hstrip_in", stage, durationToken);
-
-    private void EnqueueHorizontalStripCutOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("hstrip_out", stage, durationToken);
-
-    private void EnqueueVerticalStripOpenInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("vstrip_open", stage, durationToken);
-
-    private void EnqueueVerticalStripCloseOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("vstrip_close", stage, durationToken);
-
-    private void EnqueueVerticalStripCutInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("vstrip_in", stage, durationToken);
-
-    private void EnqueueVerticalStripCutOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("vstrip_out", stage, durationToken);
-
-    private void EnqueueDiagonalBandCutInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("band_in", stage, durationToken);
-
-    private void EnqueueDiagonalBandCutOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("band_out", stage, durationToken);
-
-    private void EnqueueCircleIrisInSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("iris_in", stage, durationToken);
-
-    private void EnqueueCircleIrisOutSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("iris_out", stage, durationToken);
-
-    // preset
-    private void EnqueueDazeFadeCloseSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("daze_close", stage, durationToken);
-
-    private void EnqueueVerticalStripCoverSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("strip_cover", stage, durationToken);
-
-    private void EnqueueTransitionOutDazeFadeSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("daze_open", stage, durationToken);
-
-    private void EnqueueTransitionOutStripSpec(string stage, string durationToken)
-        => EnqueueStageMaskMotionPresetSpec("strip_clear", stage, durationToken);
-    
     private void EnqueueStageMaskClearSpec()
     {
         Emit(new StageMaskClearCommandSpec

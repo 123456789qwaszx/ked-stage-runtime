@@ -15,28 +15,6 @@ public sealed partial class StageCommandParser
             layer = PresentationDepthLayerKeyParser.Parse(layerKey)
         });
 
-    private void EnqueueSetupCharRigStage00Spec(string slotKey, string layerKey)
-        => EnqueueSetupCharRigAtDepthSpec(slotKey, PresentationStageKey.Stage00, layerKey);
-
-    private void EnqueueSetupCharRigStage01Spec(string slotKey, string layerKey)
-        => EnqueueSetupCharRigAtDepthSpec(slotKey, PresentationStageKey.Stage01, layerKey);
-
-    private void EnqueueSetupCharRigStage02Spec(string slotKey, string layerKey)
-        => EnqueueSetupCharRigAtDepthSpec(slotKey, PresentationStageKey.Stage02, layerKey);
-
-    private void EnqueueSetupCharRigAtDepthSpec(
-        string slotKey,
-        PresentationStageKey stage,
-        string layerKey)
-        => Emit(new SetupCharRigCommandSpec
-        {
-            roleKey = slotKey,
-            rigPrefab = _charRigPrefab,
-
-            stage = stage,
-            layer = PresentationDepthLayerKeyParser.Parse(layerKey)
-        });
-
     private void EnqueueCastCharacterSpec(string slotKey, string characterKey, string variantKey, string emotionKey)
     {
         var castSpec = new CastCharacterCommandSpec
@@ -180,7 +158,6 @@ public sealed partial class StageCommandParser
 
         return OscillationSource.Default;
     }
-
 
     // ── 제자리 몸짓 ───────────────────────────────────────────────
     // 순변위 0이 정체다. 표적(CharacterPortrait_Shake)이 이동 계열과 다른 노드라
@@ -366,12 +343,4 @@ public sealed partial class StageCommandParser
             siblingMode = CharacterRigReparentSiblingMode.Front
         });
 
-    private void EnqueueMoveCharacterRigToStage00LayerSpec(string roleKey, string layerKey)
-        => EnqueueMoveCharacterRigToStageLayerSpec(roleKey, "stage00", layerKey);
-
-    private void EnqueueMoveCharacterRigToStage01LayerSpec(string roleKey, string layerKey)
-        => EnqueueMoveCharacterRigToStageLayerSpec(roleKey, "stage01", layerKey);
-
-    private void EnqueueMoveCharacterRigToStage02LayerSpec(string roleKey, string layerKey)
-        => EnqueueMoveCharacterRigToStageLayerSpec(roleKey, "stage02", layerKey);
 }
