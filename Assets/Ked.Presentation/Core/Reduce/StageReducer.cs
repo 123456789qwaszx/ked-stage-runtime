@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Ked.Presentation.Core
 {
@@ -233,16 +234,33 @@ namespace Ked.Presentation.Core
 
         // ── helper ───────────────────────────────────────────────────
 
+        /// <summary>파서 표가 등록하는 프레임 대기 별칭의 상한. `&lt;&lt;48fr&gt;&gt;` = 2초.</summary>
+        private const int MaxFrameWaitAlias = 48;
+
         /// <summary>
-        /// 시간만 쓰는 커맨드인가 — `&lt;&lt;pause 시간&gt;&gt;` 하나다.
-        /// 옛 프레임 별칭 `&lt;&lt;1fr&gt;&gt;`~`&lt;&lt;48fr&gt;&gt;`은 2026-11-03에 어휘에서 걷었다 —
-        /// 남은 대본은 모르는 커맨드로 Unhandled에 드러난다.
+        /// 시간만 쓰는 커맨드인가 — `&lt;&lt;pause 시간&gt;&gt;`와 프레임 별칭 `&lt;&lt;1fr&gt;&gt;`~`&lt;&lt;48fr&gt;&gt;`
+        /// (파서 표의 정적 생성자, 24fps 기준).
         ///
         /// 정지 프레임에 목표가 **없는 게 아니라 접을 것이 없다** — 무대 상태를 하나도
         /// 건드리지 않는다. duration 인자를 파싱조차 하지 않는 것과 같은 규율이라
         /// Unhandled로 남기지 않는다: 남기면 "아직 이관 안 됨" 작업 목록이 거짓말이 된다.
         /// </summary>
-        private static bool IsWaitCommand(string name) => name == "pause";
+        private static bool IsWaitCommand(string name)
+        {
+            if (name == "pause")
+                return true;
+
+            if (name == null || name.Length < 3 || !name.EndsWith("fr", StringComparison.Ordinal))
+                return false;
+
+            return int.TryParse(
+                       name.Substring(0, name.Length - 2),
+                       NumberStyles.None,
+                       CultureInfo.InvariantCulture,
+                       out int frames)
+                   && frames >= 1
+                   && frames <= MaxFrameWaitAlias;
+        }
 
         private static bool TryGetSlotKey(in StageCommand cmd, out string slotKey, out string reason)
         {

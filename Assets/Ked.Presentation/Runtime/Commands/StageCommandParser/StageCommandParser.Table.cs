@@ -11,9 +11,10 @@ public sealed partial class StageCommandParser
     // 이름과 인자 수만 안다 — 뜻은 여기서 정해진다.
     //
     // 정본만 둔다(2026-11-03). 같은 일을 인자 하나만 고정해 다시 부르는 이름(slotNN · char_to_sN · bg_slotNN ·
-    // screen_blur_sN · place_* · size_<라벨> · char_visual_<프리셋> · tx_<프리셋> · <<Nfr>>)은 걷었다 —
-    // 대본은 저작 툴(ked-story-compositor)이 내고, 툴은 정본만 낸다. 예외는 place_left · place_center ·
-    // place_right 셋이다(소유자 결정). 변형은 이름이 아니라 인자로 받는다.
+    // screen_blur_sN · place_* · size_<라벨> · tx_<프리셋>)은 걷었다 —
+    // 대본은 저작 툴(ked-story-compositor)이 내고, 툴은 정본만 낸다. 변형은 이름이 아니라 인자로 받는다.
+    // 예외(소유자 결정): place_left · place_center · place_right, 프레임 대기 <<1fr>>~<<48fr>>(아래 정적 생성자),
+    // 그리고 char_visual_<효과> 일곱 — 캐릭터 비주얼은 커맨드 이름에서 어떤 효과인지 드러나야 한다(일반형 char_visual도 남김).
     private static readonly Dictionary<string, Handler> Table = new(StringComparer.Ordinal)
     {
         ["pause"] = (p, c) => p.EnqueueWaitSpec(c.Arg(0)),
@@ -59,6 +60,13 @@ public sealed partial class StageCommandParser
         ["char_scale_to"] = (p, c) => p.EnqueueScaleSpec(c.Arg(0), Float(c, 1, 0f), c.Arg(2, "10fr"), c.Arg(3, "")),
         ["char_rotate_to"] = (p, c) => p.EnqueuePortraitRotateToSpec(c.Arg(0), Float(c, 1, 0f), c.Arg(2, "10fr"), c.Arg(3, "")),
         ["char_visual"] = (p, c) => p.EnqueueCharVisualPresetSpec(c.Arg(0), c.Arg(1), Float(c, 2, 1f), c.Arg(3, "6fr")),
+        ["char_visual_focus"] = (p, c) => p.EnqueueCharFocusSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "10fr")),
+        ["char_visual_defocus"] = (p, c) => p.EnqueueCharDefocusSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "17fr")),
+        ["char_visual_dim"] = (p, c) => p.EnqueueCharDimSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
+        ["char_visual_silhouette"] = (p, c) => p.EnqueueCharSilhouetteSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
+        ["char_visual_inner_rim"] = (p, c) => p.EnqueueCharInnerRimSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
+        ["char_visual_outer_rim"] = (p, c) => p.EnqueueCharOuterRimSpec(c.Arg(0), Float(c, 1, 1f), c.Arg(2, "6fr")),
+        ["char_visual_clear"] = (p, c) => p.EnqueueCharRigVisualClearSpec(c.Arg(0), c.Arg(1, "6fr")),
         // 배경 = 캐스팅하지 않은 캐릭터 슬롯(StageCommandParser.Background). bg_place·bg_size·bg_slotNN은 지운 어휘다.
         ["bg_spawn"] = (p, c) => p.EnqueueSpawnBackgroundSpec(c.Arg(0), c.Arg(1), c.Arg(2, "stage00"), c.Arg(3, "far")),
         ["bg_sprite"] = (p, c) => p.EnqueueSetBackgroundSpriteSpec(c.Arg(0), c.Arg(1, "")),
@@ -86,6 +94,15 @@ public sealed partial class StageCommandParser
         ["screen_blur_reset"] = (p, c) => p.EnqueueStageLayerBlurClearSpec(),
     };
 
-    /// <summary>이 파서가 아는 커맨드 이름 전부.</summary>
+    static StageCommandParser()
+    {
+        for (int frame = 1; frame <= FramePauseAliasMaxFrame; frame++)
+        {
+            float seconds = YarnDurationParser.FramesToSeconds(frame);
+            Table[$"{frame}fr"] = (p, c) => p.EnqueueWaitSpec(seconds);
+        }
+    }
+
+    /// <summary>이 파서가 아는 커맨드 이름 전부(프레임 별칭 포함). 브리지가 Yarn 등록에 쓴다.</summary>
     public static IEnumerable<string> CommandNames => Table.Keys;
 }
