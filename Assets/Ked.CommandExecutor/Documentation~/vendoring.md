@@ -1,27 +1,18 @@
-# 이 폴더는 복사 반입본이다
+# 이 폴더는 원본의 한 벌이다
 
-`Ked.CommandExecutor`는 **다른 저장소가 원본**이다. 여기 있는 것은 그 저장소의 `Assets/Ked.CommandExecutor/`와 같은 내용을 담은 한 벌이다(.meta GUID까지).
+원본은 ked-presentation-runtime의 `Assets/Ked.CommandExecutor/`다. 무대가 실행기를 참조하므로 같은 한 벌을 여기 둔다(.meta GUID까지).
+실행기만 따로 보이는 분리본은 ked-command-executor다 — 셋이 모두 같은 내용이다.
 
 ```
-원본   ked-command-executor   (형제 폴더 · Unity 프로젝트 · 실행기의 집)
-반입   Assets/Ked.CommandExecutor/   ← 이 폴더
+원본     ked-presentation-runtime/Assets/Ked.CommandExecutor/
+한 벌    Assets/Ked.CommandExecutor/   ← 이 폴더
+분리본   ked-command-executor/Assets/Ked.CommandExecutor/
 ```
 
-사본에서 먼저 고치는 일은 생긴다. 그때는 **원본에도 같은 손을 대서** 두 벌을 다시 맞춘다.
-
-## 스냅샷
-
-| | |
-|---|---|
-| 원본 | `ked-command-executor` · `claude/fervent-thompson-1cqiis` @ `284dac9` (2026-11-04 역반입) |
-| 마지막 동기화 | 2026-11-04 · ked-presentation-runtime의 사본에서 먼저 고친 것을 원본과 이 사본에 함께 넣었다 (S2 스텝 세대 가드 · S3/E5 신호·시간·입력 포트와 시간 배율 삭제 · E6 Run 수명 삭제 · S6 첫 진입 try). 그 전: 2026-10-27 원본 `main` @ `d12e098` → 사본 (첫 반입) |
-| 맞춘 것 | `Assets/Ked.CommandExecutor/` 전체 |
-| 코드 일치 | `.cs`·`.meta`·`.asmdef` 기준 `diff -r` 0건 (아래 "대조" 명령) |
-
-**갈리면 이 표를 고친다.** 표가 낡으면 사본이 어디서 왔는지 아무도 모른다.
+고치는 곳은 원본이다. 지금 어느 판인지는 원본의 `Assets/Ked.CommandExecutor/Documentation~/vendoring.md`에 적는다.
 
 ## 대조
 
 ```
-diff -r ../ked-command-executor/Assets/Ked.CommandExecutor Assets/Ked.CommandExecutor --exclude=Documentation~
+diff -r ../ked-presentation-runtime/Assets/Ked.CommandExecutor Assets/Ked.CommandExecutor --exclude=Documentation~
 ```

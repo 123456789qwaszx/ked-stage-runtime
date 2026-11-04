@@ -1,9 +1,10 @@
 # 어셈블리 경계 (U13-a, 2026-10-26 Playback 분리 · 2026-10-27 세 저장소)
 
-> **세 저장소.** 이 폴더(`Assets/Ked.Presentation/`)의 원본은 [ked-stage-runtime](https://github.com/123456789qwaszx/ked-stage-runtime)이고,
-> 실행기(`Assets/Ked.CommandExecutor/`)의 원본은 [ked-command-executor](https://github.com/123456789qwaszx/ked-command-executor)다.
-> `Ked.Presentation.Playback`과 예제는 재생 저장소([ked-presentation-runtime](https://github.com/123456789qwaszx/ked-presentation-runtime))에만 있다.
-> 이 문서는 세 조각이 한 프로젝트에 모였을 때의 경계를 적는다 — 어느 저장소에서 읽든 같은 문서다(복사 반입, 각 폴더의 `Documentation~/vendoring.md`).
+> **세 저장소.** 원본은 [ked-presentation-runtime](https://github.com/123456789qwaszx/ked-presentation-runtime) 하나다.
+> 포트폴리오에서 따로 보이려고 이 폴더(`Assets/Ked.Presentation/`, Playback 제외)를 [ked-stage-runtime](https://github.com/123456789qwaszx/ked-stage-runtime)에,
+> 실행기(`Assets/Ked.CommandExecutor/`)를 [ked-command-executor](https://github.com/123456789qwaszx/ked-command-executor)에 떼어 두었다(분리본).
+> `Ked.Presentation.Playback`과 예제는 원본에만 있다.
+> 이 문서는 세 조각이 한 프로젝트에 모였을 때의 경계를 적는다 — 어느 저장소에서 읽든 같은 문서다(분리본은 원본의 한 벌, 원본 각 폴더의 `Documentation~/vendoring.md`).
 
 이 폴더(`Assets/Ked.Presentation/Runtime/`)는 **하나의 어셈블리**다. 왜 이렇게 생겼는지를 여기 남긴다.
 경계는 코드 어디에도 안 보이고 `.asmdef` 파일 안에만 있어서, 근거가 없으면 다음 사람이
@@ -209,5 +210,5 @@ Playback이 예제에게 요구할 때도 같다. 계약은 Playback에, 구현�
 - 무대가 필요한 커맨드는 생성자로 받고, 팩토리가 들고 넘긴다(④). `PresentationCore/`에는 실행기만 남았다 —
   무대 상태(`PresentationStage`·`PresentationStageKey`·`IStageDepthContentSlotProvider`)는 `Stage/`로, 토큰 파서는 `Commands/Parser/`로.
 
-실행기는 그대로 저장소가 됐다 — `Assets/Ked.CommandExecutor/`(어셈블리 `Ked.CommandExecutor`, 원본 ked-command-executor).
-`Ked.Presentation.Runtime`은 `PresentationCore/`가 빠지고 실행기를 참조한다. 무대(`Core` · `Runtime` · `Editor` · 데이터·프리팹·셰이더)의 원본은 ked-stage-runtime이다.
+실행기는 그대로 떼어 낼 수 있는 조각이 됐다 — `Assets/Ked.CommandExecutor/`(어셈블리 `Ked.CommandExecutor`, 분리본 ked-command-executor).
+`Ked.Presentation.Runtime`은 `PresentationCore/`가 빠지고 실행기를 참조한다. 무대(`Core` · `Runtime` · `Editor` · 데이터·프리팹·셰이더)의 분리본은 ked-stage-runtime이다.

@@ -2,8 +2,8 @@
 
 > 연출 **무대** — 캐릭터 리그 계층과 철도(shot·depth), 그 위를 움직이는 커맨드, 대본 커맨드의 뜻(파서), 그리고 "트윈이 끝났다면 어디에 있을 것인가"를 접는 순수 코어.
 
-`ked-presentation-runtime`에서 떼어 낸 세 조각 중 하나다 — 실행기([ked-command-executor](https://github.com/123456789qwaszx/ked-command-executor)) · **무대(여기)** · 재생([ked-presentation-runtime](https://github.com/123456789qwaszx/ked-presentation-runtime)).
-가른 근거와 결정은 재생 저장소의 `docs/PLAN_stage-seam.md`에 있다.
+원본은 [ked-presentation-runtime](https://github.com/123456789qwaszx/ked-presentation-runtime)이다. 이 저장소는 그중 **무대**만 따로 보이려고 떼어 둔 분리본이다 —
+실행기는 [ked-command-executor](https://github.com/123456789qwaszx/ked-command-executor)에 같은 식으로 떼어 두었다. 가른 근거와 결정은 원본의 `docs/PLAN_stage-seam.md`에 있다.
 
 ## 무엇이 있나
 
@@ -13,7 +13,7 @@
 | `Ked.Presentation.Runtime` | `Assets/Ked.Presentation/Runtime/` | Unity 실행 계층 — `Stage`(무대 상태) · `Commands`(커맨드 · 팩토리 · **`StageCommandParser`**) · `CharacterRig`(배경도 이 리그 — 캐스팅하지 않은 슬롯) · `ShotResponse` · `ScreenEffect` · `StageMask` · `Audio`. 경계의 근거는 [`Runtime/ASSEMBLY-BOUNDARY.md`](Assets/Ked.Presentation/Runtime/ASSEMBLY-BOUNDARY.md) |
 | `Ked.Presentation.Editor` | `Assets/Ked.Presentation/Editor/` | 초상 DB 빌더 · 튜닝 덤프 익스포터 · 이징 골든 |
 | `Ked.Presentation.Core.Tests` | `Assets/Ked.Presentation/Core/Tests/EditMode/` | EditMode 테스트 — 리듀서 · 이징/커브 등가 · 파서 · Unity 대조 |
-| `Ked.CommandExecutor` | `Assets/Ked.CommandExecutor/` | **반입본**(원본 ked-command-executor, [vendoring.md](Assets/Ked.CommandExecutor/Documentation~/vendoring.md)) |
+| `Ked.CommandExecutor` | `Assets/Ked.CommandExecutor/` | 실행기 — 원본 ked-presentation-runtime의 한 벌([vendoring.md](Assets/Ked.CommandExecutor/Documentation~/vendoring.md)) |
 
 그 밖에 `Data/`(프리셋 DB) · `Prefabs/`(리그 셋) · `Resources/VisualEffects/`(시각 효과 재질과 셰이더) · `Audio/`(믹서) · `ExportedTuning/`(튜닝 덤프와 [schema.md](ExportedTuning/schema.md)).
 
@@ -45,12 +45,13 @@
 
 저장소는 "무대"지만 어셈블리·네임스페이스는 `Ked.Presentation.*`다. 저작 도구(VnTool)가 `Ked.Presentation.Core` 네임스페이스를 그대로 반입하고 있고, 재생 저장소의 씬·프리팹이 같은 스크립트 GUID를 가리킨다. 이름을 바꾸면 그 둘이 함께 바뀌어야 한다 — 바꿀 날이 오면 세 저장소를 한 번에.
 
-## 다른 저장소로 가져가기
+## 원본과의 관계
 
-패키지가 아니다. **복사 반입**이다 — `Assets/Ked.Presentation/`(Playback 제외)과 `ExportedTuning/`을 `.meta`까지 통째로 복사하고, 반입한 쪽의 `Documentation~/vendoring.md`에 원본 커밋을 적는다. 여기가 원본이다. 사본에서 먼저 고쳤으면 여기에도 같은 손을 댄다.
+패키지가 아니다. 이 저장소는 원본(ked-presentation-runtime)의 `Assets/Ked.Presentation/`(Playback 제외)과 `ExportedTuning/`을 `.meta`까지 같은 한 벌로 따라간다.
+고치는 곳은 원본이고, 고친 뒤 이쪽을 맞춘다. 지금 어느 판인지는 원본의 `Assets/Ked.Presentation/Documentation~/vendoring.md`에 적는다.
 
 ## 의존
 
 - Unity `6000.3.16f1` · URP (`Assets/Settings`)
 - DOTween (`Assets/Plugins/Demigiant/`)
-- 실행기 반입본 `Ked.CommandExecutor`
+- 실행기 `Ked.CommandExecutor`(원본의 한 벌)
