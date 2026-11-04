@@ -18,18 +18,12 @@ public sealed class ScreenVignetteCommandSpec : CommandSpecBase
     public Ease ease = Ease.OutCubic;
 }
 
+// 비네트 의도를 프리셋에서 계산해 넘기기만 한다 — 전환은 컨트롤러가 소유한다.
 public sealed class ScreenVignetteCommand : CommandBase
 {
     private readonly ScreenVignetteCommandSpec _spec;
     private readonly ScreenEffectRig _screenEffects;
     private readonly ScreenVignettePresetDBSO _presetDb;
-
-    private ScreenVignetteEffectController _controller;
-
-    private VignetteState _fromState;
-    private VignetteState _destState;
-
-    private bool HasClaimedController { get; set; }
 
     public override bool WaitForCompletion => _spec.wait;
 
@@ -45,82 +39,30 @@ public sealed class ScreenVignetteCommand : CommandBase
 
     protected override IEnumerator ExecuteInner(CommandRunScope scope)
     {
-        ClaimController();
+        ScreenVignetteEffectController controller = _screenEffects.Vignette;
+        controller.Follow(BuildDestState(controller), _spec.duration, _spec.ease);
 
-        if (_spec.duration <= 0f)
-        {
-            CommitFinalState();
+        if (!_spec.wait)
             yield break;
-        }
 
-        Tween tween = DOTween
-            .To(
-                () => 0f,
-                t =>
-                {
-                    VignetteState state = VignetteState.Lerp(_fromState, _destState, t);
-                    ApplyState(state);
-                },
-                1f,
-                _spec.duration)
-            .SetEase(_spec.ease)
-            .SetUpdate(true)
-            .SetTarget(_controller.transform)
-            .OnComplete(CommitFinalState);
-
-        if (_spec.wait)
-            yield return tween.WaitForCompletion();
+        while (controller.IsTransitioning)
+            yield return null;
     }
 
     protected override void OnSkip(CommandRunScope scope)
     {
-        if (!HasClaimedController)
-            ClaimController();
-
-        CommitFinalState();
+        ScreenVignetteEffectController controller = _screenEffects.Vignette;
+        controller.Snap(BuildDestState(controller));
     }
 
-    private void ClaimController()
-    {
-        _controller = _screenEffects.Vignette;
-        _controller.KillTween(true);
-
-        _fromState = CaptureCurrentState();
-        _destState = BuildDestState();
-
-        HasClaimedController = true;
-    }
-    
-    private void CommitFinalState()
-    {
-        _controller.KillTween(false);
-        ApplyState(_destState);
-
-        HasClaimedController = false;
-    }
-
-    private VignetteState CaptureCurrentState()
-    {
-        return new VignetteState(
-            _controller.Amount,
-            _controller.Color,
-            _controller.Radius,
-            _controller.Softness,
-            _controller.Aspect);
-    }
-
-    private VignetteState BuildDestState()
+    private ScreenVignetteEffectController.State BuildDestState(ScreenVignetteEffectController controller)
     {
         float intensity = Mathf.Clamp01(_spec.intensity);
-        return BuildPresetState(_spec.presetKey, intensity);
-    }
 
-    private VignetteState BuildPresetState(string presetKey, float intensity)
-    {
         if (_presetDb != null &&
-            _presetDb.TryGet(presetKey, out ScreenVignettePresetDBSO.Entry e))
+            _presetDb.TryGet(_spec.presetKey, out ScreenVignettePresetDBSO.Entry e))
         {
-            return new VignetteState(
+            return new ScreenVignetteEffectController.State(
                 e.amount * intensity,
                 e.color,
                 e.radius,
@@ -130,13 +72,13 @@ public sealed class ScreenVignetteCommand : CommandBase
 
         Debug.LogWarning(
             $"[ScreenVignetteCommand] Vignette preset not found. " +
-            $"presetKey='{presetKey}'. Using fallback.",
-            _controller);
+            $"presetKey='{_spec.presetKey}'. Using fallback.",
+            controller);
 
         if (_presetDb != null &&
             _presetDb.TryGet(ScreenVignettePresetDBSO.DefaultPresetKey, out e))
         {
-            return new VignetteState(
+            return new ScreenVignetteEffectController.State(
                 e.amount * intensity,
                 e.color,
                 e.radius,
@@ -144,56 +86,11 @@ public sealed class ScreenVignetteCommand : CommandBase
                 e.aspect);
         }
 
-        return new VignetteState(
+        return new ScreenVignetteEffectController.State(
             0.35f * intensity,
             Color.black,
             0.25f,
             0.10f,
             1.2f);
-    }
-
-    private void ApplyState(VignetteState state)
-    {
-        _controller.ApplyImmediate(
-            state.Amount,
-            state.Color,
-            state.Radius,
-            state.Softness,
-            state.Aspect);
-    }
-
-    private readonly struct VignetteState
-    {
-        public readonly float Amount;
-        public readonly Color Color;
-        public readonly float Radius;
-        public readonly float Softness;
-        public readonly float Aspect;
-
-        public VignetteState(
-            float amount,
-            Color color,
-            float radius,
-            float softness,
-            float aspect)
-        {
-            Amount = Mathf.Clamp01(amount);
-            Color = color;
-            Radius = Mathf.Clamp01(radius);
-            Softness = Mathf.Max(0.001f, softness);
-            Aspect = Mathf.Max(0f, aspect);
-        }
-
-        public static VignetteState Lerp(VignetteState from, VignetteState to, float t)
-        {
-            t = Mathf.Clamp01(t);
-
-            return new VignetteState(
-                Mathf.Lerp(from.Amount, to.Amount, t),
-                Color.Lerp(from.Color, to.Color, t),
-                Mathf.Lerp(from.Radius, to.Radius, t),
-                Mathf.Lerp(from.Softness, to.Softness, t),
-                Mathf.Lerp(from.Aspect, to.Aspect, t));
-        }
     }
 }

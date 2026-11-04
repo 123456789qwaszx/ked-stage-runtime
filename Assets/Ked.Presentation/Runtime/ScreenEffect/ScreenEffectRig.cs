@@ -35,6 +35,7 @@ public sealed class ScreenEffectRig : MonoBehaviour
         Flash?.ClearImmediate();
     }
 
+    // 조립 때와 장면 경계(정지)에서 — 진행 중인 전환·플래시를 확정 없이 끊고 세기를 0으로.
     public void ResetToBaselineImmediate()
     {
         ClearAllImmediate();

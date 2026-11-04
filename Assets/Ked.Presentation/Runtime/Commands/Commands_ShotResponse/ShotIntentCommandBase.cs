@@ -18,6 +18,8 @@ public abstract class ShotIntentCommandSpecBase : CommandSpecBase
     public Ked.Presentation.Core.CurveKey[] customCurveKeys;
 }
 
+// 샷 커맨드는 다음 의도를 계산해 넘기기만 한다 — 전환은 PresentationShotResponseSystem이 소유한다.
+// 출발점이 화면에 보이는 값이 아니라 의도라서, 앞 전환이 얼마나 갔는지와 무관하게 결과가 같다.
 public abstract class ShotIntentCommandBase<TSpec> : CommandBase
     where TSpec : ShotIntentCommandSpecBase
 {
@@ -25,13 +27,6 @@ public abstract class ShotIntentCommandBase<TSpec> : CommandBase
 
     protected readonly PresentationShotResponseSystem rig;
     protected readonly TSpec spec;
-
-    private PresentationIntentState _fromState;
-    private PresentationIntentState _toState;
-
-    private Tween _tween;
-
-    private bool HasClaimedRig { get; set; }
 
     public override bool WaitForCompletion => spec.wait;
 
@@ -43,148 +38,26 @@ public abstract class ShotIntentCommandBase<TSpec> : CommandBase
 
     protected override IEnumerator ExecuteInner(CommandRunScope scope)
     {
-        ClaimRig(scope);
+        rig.Follow(BuildTargetState(rig.Intent, scope), spec.duration, spec.ease, spec.customCurveKeys);
 
-        if (spec.duration <= 0f || PresentationShotIntentMath.ApproximatelyEqual(_fromState, _toState))
-        {
-            CommitFinalState();
+        if (!spec.wait)
             yield break;
-        }
 
-        _tween = DOTween
-            .To(
-                () => 0f,
-                t =>
-                {
-                    PresentationIntentState state =
-                        PresentationShotIntentMath.Interpolate(_fromState, _toState, t);
-
-                    rig.ApplyToAllBindings(state);
-                },
-                1f,
-                spec.duration)
-            .ApplyEase(spec.ease, spec.customCurveKeys)
-            .SetUpdate(true)
-            .SetTarget(rig)
-            .OnComplete(CommitFinalState);
-
-        if (spec.wait)
-            yield return _tween.WaitForCompletion();
+        while (rig.IsTransitioning)
+            yield return null;
     }
 
     protected override void OnSkip(CommandRunScope scope)
     {
-        if (!HasClaimedRig)
-            ClaimRig(scope);
-
-        CommitFinalState();
+        rig.Snap(BuildTargetState(rig.Intent, scope));
     }
 
     protected abstract PresentationIntentState BuildTargetState(
         in PresentationIntentState from,
         CommandRunScope scope);
 
-    private void ClaimRig(CommandRunScope scope)
-    {
-        DOTween.Kill(rig, true);
-
-        _fromState = rig.CurrentState;
-        _toState = BuildTargetState(_fromState, scope);
-
-        HasClaimedRig = true;
-    }
-
-    private void CommitFinalState()
-    {
-        rig.ApplyToAllBindings(_toState);
-
-        HasClaimedRig = false;
-        _tween = null;
-    }
-
-    #region StepLifetimeHook
-
     protected override void OnStepLifetimeFinished(CommandRunScope scope)
     {
-        if (!HasClaimedRig)
-            return;
-        
-        _tween.Kill(false);
-
-        PresentationIntentState currentState = rig.CurrentState;
-        float duration = CalculateAcceleratedRemainingDuration(in currentState);
-
-        _fromState = currentState;
-
-        _tween = DOTween
-            .To(
-                () => 0f,
-                t =>
-                {
-                    PresentationIntentState state =
-                        PresentationShotIntentMath.Interpolate(_fromState, _toState, t);
-
-                    rig.ApplyToAllBindings(state);
-                },
-                1f,
-                duration)
-            .ApplyEase(spec.ease, spec.customCurveKeys)
-            .SetUpdate(true)
-            .SetTarget(rig)
-            .OnComplete(CommitFinalState);
+        rig.AccelerateTransition(StepFinishSpeedUpMultiplier);
     }
-
-    private float CalculateAcceleratedRemainingDuration(
-        in PresentationIntentState currentState)
-    {
-        float zoomRatio = CalculateScalarRemainingRatio(
-            _fromState.zoom,
-            _toState.zoom,
-            currentState.zoom);
-
-        float panRatio = CalculateVectorRemainingRatio(
-            _fromState.panInRigSpace,
-            _toState.panInRigSpace,
-            currentState.panInRigSpace);
-
-        float focusRatio = CalculateVectorRemainingRatio(
-            _fromState.focusPointInRigSpace,
-            _toState.focusPointInRigSpace,
-            currentState.focusPointInRigSpace);
-
-        float remainingRatio = Mathf.Max(zoomRatio, panRatio, focusRatio);
-        float remainingDuration = spec.duration * remainingRatio;
-
-        return Mathf.Max(0.01f, remainingDuration / StepFinishSpeedUpMultiplier);
-    }
-
-    private static float CalculateScalarRemainingRatio(
-        float from,
-        float to,
-        float current)
-    {
-        float originalDistance = Mathf.Abs(to - from);
-        float remainingDistance = Mathf.Abs(to - current);
-
-        if (originalDistance <= 0.001f || remainingDistance <= 0.001f)
-            return 0f;
-
-        return Mathf.Clamp01(remainingDistance / originalDistance);
-    }
-
-    private static float CalculateVectorRemainingRatio(
-        Vector2 from,
-        Vector2 to,
-        Vector2 current)
-    {
-        float originalDistance = Vector2.Distance(from, to);
-        float remainingDistance = Vector2.Distance(current, to);
-
-        if (originalDistance <= 0.001f || remainingDistance <= 0.001f)
-            return 0f;
-
-        return Mathf.Clamp01(remainingDistance / originalDistance);
-    }
-
-    #endregion
 }

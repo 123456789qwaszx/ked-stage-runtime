@@ -10,6 +10,9 @@ using UnityEngine.UI;
 // 겹 구조: CharacterPortraitSpriteOverlay_Root가 초상 위에 얹혀 새 표정을 먼저 띄우고,
 // 완전히 덮은 순간 밑장(CharacterPortraitSprite_Image)을 갈아끼운 뒤 위 겹을 걷는다.
 // 정지 프레임에는 밑장만 남으므로 코어 리듀서는 face와 같은 자리(ApplyFace)에서 접는다.
+//
+// 스텝 경계는 비워 둔다 — 밑장에 쓰는 커맨드가 모두 CompleteInFlight를 거치므로 끝까지 돌아도 나중 쓰기가 이긴다.
+// 초상 α는 fade_in/out의 축이라 쓰지 않는다.
 [Serializable]
 public sealed class SetEmotionPortraitWipeCommandSpecCharR : CharacterRigCommandSpecBase
 {
@@ -34,7 +37,6 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
     private readonly SetEmotionPortraitWipeCommandSpecCharR _spec;
     private readonly PortraitResolver _resolver;
 
-    private RectTransform _portraitRoot;
     private RectTransform _overlayRoot;
     private Image _portraitImage;
     private Image _overlayImage;
@@ -46,8 +48,6 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
 
     private bool _resolveAttempted;
     private bool _hasResolvedTargetSprite;
-
-    private bool HasClaimedTarget { get; set; }
 
     public override bool WaitForCompletion => _spec.wait;
 
@@ -61,6 +61,20 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
         _stage = stage;
         _spec = spec;
         _resolver = resolver;
+    }
+
+    // 밑장(스프라이트·사이징)에 쓰는 커맨드는 쓰기 전에 부른다.
+    // 진행 중인 face_swap을 완주시켜(OnComplete가 제 표정을 확정) 나중 쓰기가 이기게 한다.
+    public static void CompleteInFlight(CharacterRigRefs rig)
+    {
+        if (rig != null)
+            CompleteInFlight(rig.CharacterPortraitSpriteOverlay_Root);
+    }
+
+    private static void CompleteInFlight(RectTransform overlayRoot)
+    {
+        if (overlayRoot != null)
+            overlayRoot.DOKill(true);
     }
 
     protected override IEnumerator ExecuteInner(CommandRunScope scope)
@@ -83,26 +97,15 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
             .SetUpdate(true)
             .SetTarget(_overlayRoot);
 
-        _seq.Append(
-            _overlayCanvasGroup
-                .DOFade(1f, _spec.duration)
-                .SetEase(_spec.ease)
-                .SetUpdate(true)
-                .SetTarget(_overlayCanvasGroup));
+        _seq.Append(CreateOverlayTween(0f, 1f));
 
         _seq.AppendCallback(() =>
         {
             _portraitImage.sprite = _targetSprite;
             ApplySizing(_portraitImage, _targetSprite);
-            _portraitCanvasGroup.alpha = 1f;
         });
 
-        _seq.Append(
-            _overlayCanvasGroup
-                .DOFade(0f, _spec.duration)
-                .SetEase(_spec.ease)
-                .SetUpdate(true)
-                .SetTarget(_overlayCanvasGroup));
+        _seq.Append(CreateOverlayTween(1f, 0f));
 
         _seq.OnComplete(CommitFinalState);
 
@@ -117,11 +120,8 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
 
         ResolveTargetSprite(scope);
 
-        if (!HasClaimedTarget)
-            ClaimTarget();
-        else
-            KillCurrentTween();
-
+        // OnSkip은 ExecuteInner 전에만 불린다 — 아직 잡은 것이 없다.
+        ClaimTarget();
         CommitFinalState();
     }
 
@@ -135,12 +135,12 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
 
         CharacterRigRefs rigRefs = CharacterRigTargetResolver.ResolveCharRigFromTargetKey(_stage, _spec.slotKey);
 
-        _portraitRoot = rigRefs.CharacterPortraitSprite_Root;
+        RectTransform portraitRoot = rigRefs.CharacterPortraitSprite_Root;
         _overlayRoot = rigRefs.CharacterPortraitSpriteOverlay_Root;
         _portraitImage = rigRefs.CharacterPortraitSprite_Image;
         _overlayImage = rigRefs.CharacterPortraitSpriteOverlay_Image;
 
-        _portraitCanvasGroup = _portraitRoot != null ? _portraitRoot.GetComponent<CanvasGroup>() : null;
+        _portraitCanvasGroup = portraitRoot != null ? portraitRoot.GetComponent<CanvasGroup>() : null;
         _overlayCanvasGroup = _overlayRoot != null ? _overlayRoot.GetComponent<CanvasGroup>() : null;
 
         if (_overlayRoot == null || _overlayImage == null)
@@ -165,18 +165,10 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
         _hasResolvedTargetSprite = true;
     }
 
-    private void ClaimTarget()
-    {
-        KillPreviousTween();
-
-        HasClaimedTarget = true;
-    }
+    private void ClaimTarget() => CompleteInFlight(_overlayRoot);
 
     private void PrepareTransitionState()
     {
-        if (_portraitCanvasGroup != null)
-            _portraitCanvasGroup.alpha = 1f;
-
         if (!HasOverlayLayer)
             return;
 
@@ -187,43 +179,28 @@ public sealed class SetEmotionPortraitWipeCommandCharR : CommandBase
         ApplySizing(_overlayImage, _targetSprite);
     }
 
+    // 위 겹은 밑장의 형제라 초상 α를 물려받지 않는다 — 덮은 정도에 초상 α를 곱해 따라간다.
+    private Tween CreateOverlayTween(float from, float to)
+        => DOTween
+            .To(() => from, ApplyOverlayCoverage, to, _spec.duration)
+            .SetEase(_spec.ease);
+
+    private void ApplyOverlayCoverage(float coverage)
+    {
+        float portraitAlpha = _portraitCanvasGroup != null ? _portraitCanvasGroup.alpha : 1f;
+        _overlayCanvasGroup.alpha = coverage * portraitAlpha;
+    }
+
     private void CommitFinalState()
     {
         _portraitImage.sprite = _targetSprite;
         ApplySizing(_portraitImage, _targetSprite);
-
-        if (_portraitCanvasGroup != null)
-            _portraitCanvasGroup.alpha = 1f;
 
         if (HasOverlayLayer)
         {
             _overlayCanvasGroup.alpha = 0f;
             _overlayImage.enabled = false;
         }
-
-        HasClaimedTarget = false;
-    }
-
-    private void KillPreviousTween() => KillTweens(true);
-
-    private void KillCurrentTween() => KillTweens(false);
-
-    private void KillTweens(bool complete)
-    {
-        _seq?.Kill(false);
-        _seq = null;
-
-        if (_overlayCanvasGroup != null)
-            _overlayCanvasGroup.DOKill(complete);
-
-        if (_portraitCanvasGroup != null)
-            _portraitCanvasGroup.DOKill(complete);
-
-        if (_overlayRoot != null)
-            _overlayRoot.DOKill(complete);
-
-        if (_portraitRoot != null)
-            _portraitRoot.DOKill(complete);
     }
 
     private void ApplySizing(Image image, Sprite sprite)

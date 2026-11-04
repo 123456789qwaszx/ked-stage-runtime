@@ -91,7 +91,7 @@ Bjørge, *Bandwidth-Efficient Rendering*, SIGGRAPH 2015 Mobile Graphics (ARM).
 
 ### 캐릭터 — 밉맵 + 십자 4탭
 
-`Assets/Ked.Presentation/Shaders/CharacterBlur.hlsl`.
+`Assets/Ked.Presentation/Resources/VisualEffects/CharacterBlur.hlsl`.
 
 **밉맵은 이미 블러다.** 밉 체인은 로드 시점에 박스 필터로 만들어진다 — 레벨 n은 2ⁿ×2ⁿ 영역의 평균이다.
 LOD 4를 읽는 것은 16×16 박스 블러를 **1탭**에 얻는 것이고, 메모리는 +33%(1+¼+⅟₁₆+… = 4/3)뿐이다.
@@ -199,18 +199,32 @@ coc = saturate(|depthScale_char − depthScale_focus| × falloff) × maxBlur
 
 배경은 대상이 아니다. `screen_blur far`가 이미 레이어 단위로 처리한다.
 
-### ⚠ 블러를 쓰는 커맨드가 셋이다
+### 블러를 쓰는 커맨드가 셋이다 — 출처를 나누고 가장 큰 값으로 합친다 (2026-11-03)
 
-`focus_on` · `screen_blur` · `char_visual_focus/defocus`(프리셋의 `blur` 필드)가 모두
-같은 `_BlurAmount`를 쓴다. 서로 죽이지 않으므로 **동시에 걸면 매 프레임 싸운다.**
+`focus_on` · `screen_blur` · `char_visual_*`(프리셋의 `blur` 필드)가 모두 `_BlurAmount`에 닿는다.
+예전에는 셋이 같은 값을 서로 다른 트윈 타깃으로 써서 **동시에 걸면 매 프레임 싸웠고**,
+blur가 0인 `char_visual` 프리셋(dim·rim·clear …)은 앞서 걸린 초점·레이어 블러를 지웠다.
 
-재발행만은 막아 두었다 — 트윈 타깃을 커맨드 인스턴스가 아니라 공유 스코프로 잡는다:
+지금은 리그의 `RigVisualEffectController`가 출처를 따로 든다:
 
-| 커맨드 | 트윈 타깃 |
-|---|---|
-| `focus_on` | `CharacterRigRegistry` (모든 캐릭터) |
-| `screen_blur` | 레이어의 content root |
-| `char_visual_*` | 해당 리그의 컨트롤러 |
+| 출처 | 커맨드 | 대상 |
+|---|---|---|
+| 모양(Style)의 blur | `char_visual_*` | 그 리그 |
+| 초점 블러 | `focus_on` · `focus_clear` | 배역이 있는 리그 전부(CoC) |
+| 레이어 블러 | `screen_blur` · `screen_blur_reset` | 그 레이어 아래 리그 |
 
-같은 커맨드를 다시 걸면 이전 트윈이 죽는다. **다른 커맨드끼리는 여전히 겹칠 수 있다** —
-저작에서 한 번에 하나만 쓰는 것이 전제다.
+- **셰이더에 쓰는 값은 셋 중 가장 큰 값이다**(소유자 결정). 서로 덮어쓰지 않고, 흐림이 겹쳐도 더 흐려지지 않는다.
+- 각 출처의 전환은 컨트롤러가 하나씩 소유한다(`IntentTransition`). 커맨드는 목표만 넘기고,
+  새 목표는 지금 보이는 값에서 다시 조준한다. 같은 줄에 두 번 걸어도 나중 것이 이긴다.
+- 스텝 경계 가속(×1.5)은 그대로다 — 커맨드가 컨트롤러의 전환을 가속시킨다.
+
+### 초점·레이어 블러는 장면 전역 의도다 (2026-11-03)
+
+예전 `focus_on`·`screen_blur`는 실행 순간의 스냅숏이었다 — 그때 있던 리그만, 그때의 깊이로 흐렸다.
+그래서 뒤에 등장한 캐릭터는 선명했고, `size`로 깊이가 바뀌어도, `char_to`로 블러 레이어를 드나들어도 따라가지 않았다.
+
+지금은 `RigBlurIntentSystem`이 의도(초점 대상·falloff·최대 흐림, 무대·레이어별 양)를 든다. 커맨드는 의도만 넘긴다.
+줄 머리에서 커맨드가 다 돈 뒤(`YarnPlaybackDriver.LineHeadPlayed`) 시스템이 살아 있는 리그 전부의 목표를 다시 정한다 —
+처음 보는 리그는 Snap(등장 중이라 티가 나지 않는다), 목표가 바뀐 리그는 Follow, 압축 중이면 모두 Snap.
+초점 대상 키는 줄마다 다시 풀므로 배역 키면 슬롯을 옮겨도 따라간다. `pause` 뒤(같은 줄 후반)의 변화는 다음 줄 머리에서 따라간다.
+정지에서 의도를 비운다 — 리플레이가 커맨드를 다시 지나가며 세운다.

@@ -2,12 +2,52 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 노이즈는 장면 전역 의도다 — 커맨드가 의도를 쓰고, 화면은 이 컨트롤러가 따라간다(IntentTransition).
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Image))]
 public sealed class ScreenNoiseEffectController :
     MonoBehaviour,
     IScreenEffectController
 {
+    public readonly struct State
+    {
+        public readonly float Amount;
+        public readonly Color Color;
+        public readonly float Scale;
+        public readonly float SpeedX;
+        public readonly float SpeedY;
+        public readonly float Contrast;
+
+        public State(
+            float amount,
+            Color color,
+            float scale,
+            float speedX,
+            float speedY,
+            float contrast)
+        {
+            Amount = Mathf.Clamp01(amount);
+            Color = color;
+            Scale = Mathf.Max(0f, scale);
+            SpeedX = speedX;
+            SpeedY = speedY;
+            Contrast = Mathf.Max(0f, contrast);
+        }
+
+        public static State Lerp(State from, State to, float t)
+        {
+            t = Mathf.Clamp01(t);
+
+            return new State(
+                Mathf.Lerp(from.Amount, to.Amount, t),
+                Color.Lerp(from.Color, to.Color, t),
+                Mathf.Lerp(from.Scale, to.Scale, t),
+                Mathf.Lerp(from.SpeedX, to.SpeedX, t),
+                Mathf.Lerp(from.SpeedY, to.SpeedY, t),
+                Mathf.Lerp(from.Contrast, to.Contrast, t));
+        }
+    }
+
     [Header("Target")]
     [SerializeField] private Image targetImage;
 
@@ -40,12 +80,33 @@ public sealed class ScreenNoiseEffectController :
     private static readonly int NoiseSpeedYId = Shader.PropertyToID("_NoiseSpeedY");
     private static readonly int NoiseContrastId = Shader.PropertyToID("_NoiseContrast");
 
+    private IntentTransition<State> _transition;
+
     public float Amount => _amount;
     public Color Color => _color;
     public float Scale => _scale;
     public float SpeedX => _speedX;
     public float SpeedY => _speedY;
     public float Contrast => _contrast;
+
+    public State Presented => new(_amount, _color, _scale, _speedX, _speedY, _contrast);
+
+    public State Intent => Transition.Intent;
+
+    public bool IsTransitioning => Transition.IsTransitioning;
+
+    private IntentTransition<State> Transition
+    {
+        get
+        {
+            if (_transition != null)
+                return _transition;
+
+            InitializeStateIfNeeded();
+            _transition = new IntentTransition<State>(Presented, () => Presented, ApplyState, State.Lerp, this);
+            return _transition;
+        }
+    }
 
     private void Reset() => EnsureTarget();
 
@@ -66,6 +127,8 @@ public sealed class ScreenNoiseEffectController :
         KillTween(false);
         DisposeMaterial();
     }
+
+    public Material SourceMaterial => sourceMaterial;
 
     public void Bind(Image image, Material material)
     {
@@ -109,12 +172,28 @@ public sealed class ScreenNoiseEffectController :
         ApplyMaterialValues();
     }
 
+    public void Follow(in State intent, float duration, Ease ease) => Transition.Follow(intent, duration, ease);
+
+    public void Snap(in State intent) => Transition.Snap(intent);
+
+    // 기준 상태 — 전환을 멈추고 세기만 0으로(색·스케일 등은 남긴다).
     public void ClearImmediate()
     {
-        ApplyImmediate(0f, _color, _scale, _speedX, _speedY, _contrast);
+        Snap(new State(0f, _color, _scale, _speedX, _speedY, _contrast));
     }
 
-    public void KillTween(bool complete) => transform.DOKill(complete);
+    public void KillTween(bool complete)
+    {
+        if (complete)
+            Snap(Intent);
+        else
+            Transition.Stop();
+    }
+
+    private void ApplyState(State state)
+    {
+        ApplyImmediate(state.Amount, state.Color, state.Scale, state.SpeedX, state.SpeedY, state.Contrast);
+    }
 
     private void InitializeStateIfNeeded()
     {

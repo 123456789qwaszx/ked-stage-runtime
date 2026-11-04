@@ -32,7 +32,10 @@ public sealed class MotionCommandSpecCharR : CharacterRigCommandSpecBase
 // 그래서 ClaimTweenCommandBase(트윈 하나)를 쓰지 않고 같은 수명을 직접 돈다:
 //   Resolve → Claim(DOKill·종점·게시) → 트윈들 → Commit(종점 쓰기·장부 Clear) / Skip / 스텝 경계.
 //
-// 스텝 경계 가속은 없다 — 초 단위 진행 트윈이라 "남은 거리"가 없다. gesture와 같은 판단으로 즉시 확정.
+// 소유 단위는 노드가 아니라 모션 하나(노드 묶음)다. 끊기면 언제나 전부 끝 상태로 확정한다:
+//   - 스텝 경계 — 가속 없음(초 단위 진행 트윈이라 "남은 거리"가 없다). gesture와 같은 판단으로 즉시 확정.
+//   - 다른 커맨드가 노드 하나라도 잡으면(DOKill(true)로 그 노드 트윈이 완주되면) 나머지 노드도 멈추고 전부 확정한 뒤 넘겨준다.
+//     그래야 섞인 자세(일부만 끝난 모션)가 남지 않고, 잡은 쪽은 모션의 종점에서 출발한다.
 // ─────────────────────────────────────────────────────────────────────────────
 public sealed class MotionCommandCharR : CommandBase
 {
@@ -180,16 +183,15 @@ public sealed class MotionCommandCharR : CommandBase
         _claimed = false;
     }
 
+    // 노드 트윈 하나가 끝나면 모션 전체를 확정한다 — 자연 종료(모든 노드가 같은 길이)든,
+    // 다른 커맨드가 그 노드를 DOKill(true)로 잡았든 같다.
     private void OnTweenComplete()
     {
-        for (int i = 0; i < _tweens.Count; i++)
-        {
-            if (_tweens[i].IsActive() && !_tweens[i].IsComplete())
-                return;
-        }
+        if (!_claimed)
+            return;
 
-        if (_claimed)
-            Commit();
+        KillTweens();
+        Commit();
     }
 
     private void KillTweens()

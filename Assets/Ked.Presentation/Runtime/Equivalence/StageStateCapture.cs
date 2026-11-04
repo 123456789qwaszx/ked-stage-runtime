@@ -34,7 +34,7 @@ public static class StageStateCapture
 
         // 샷 축은 "저작된 의도"를 그대로 읽는다 — 카메라 트랜스폼이 아니라.
         if (shotSystem != null)
-            state.Shot = shotSystem.CurrentState.ToCore();
+            state.Shot = shotSystem.Intent.ToCore();
 
         return state;
     }

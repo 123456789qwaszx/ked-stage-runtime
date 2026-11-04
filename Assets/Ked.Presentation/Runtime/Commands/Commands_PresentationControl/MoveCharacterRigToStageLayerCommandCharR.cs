@@ -55,14 +55,6 @@ public sealed class MoveCharacterRigToStageLayerCommandCharR : CommandBase
         yield break;
     }
 
-    protected override void OnSkip(CommandRunScope scope)
-    {
-        if (!_resolveAttempted)
-            ResolveRefs(scope);
-
-        Apply();
-    }
-
     private void ResolveRefs(CommandRunScope scope)
     {
         _resolveAttempted = true;

@@ -81,18 +81,9 @@ public sealed class ScreenEffectRigBuilder
         if (node.StretchFull)
             StretchFull(rt);
 
-        Image image = null;
-        Material sourceMaterial = LoadMaterial(node.MaterialResourcesPath);
+        Image image = node.NeedsImage ? EnsureImage(rt, node) : null;
 
-        if (node.NeedsImage)
-        {
-            image = EnsureImage(rt, node);
-
-            if (sourceMaterial != null)
-                image.material = sourceMaterial;
-        }
-
-        EnsureController(rt.gameObject, image, sourceMaterial, node.Controller);
+        EnsureController(rt.gameObject, image, node.MaterialResourcesPath, node.Controller);
     }
 
     private Image EnsureImage(
@@ -111,21 +102,21 @@ public sealed class ScreenEffectRigBuilder
     private void EnsureController(
         GameObject go,
         Image image,
-        Material sourceMaterial,
+        string materialResourcesPath,
         ScreenEffectRigSchema.ControllerKind kind)
     {
         switch (kind)
         {
             case ScreenEffectRigSchema.ControllerKind.Vignette:
-                EnsureEffectController<ScreenVignetteEffectController>(go, image, sourceMaterial);
+                EnsureEffectController<ScreenVignetteEffectController>(go, image, materialResourcesPath);
                 break;
 
             case ScreenEffectRigSchema.ControllerKind.Noise:
-                EnsureEffectController<ScreenNoiseEffectController>(go, image, sourceMaterial);
+                EnsureEffectController<ScreenNoiseEffectController>(go, image, materialResourcesPath);
                 break;
 
             case ScreenEffectRigSchema.ControllerKind.Flash:
-                EnsureEffectController<ScreenFlashEffectController>(go, image, sourceMaterial);
+                EnsureEffectController<ScreenFlashEffectController>(go, image, materialResourcesPath);
                 break;
 
             case ScreenEffectRigSchema.ControllerKind.None:
@@ -136,11 +127,16 @@ public sealed class ScreenEffectRigBuilder
     private void EnsureEffectController<T>(
         GameObject go,
         Image image,
-        Material sourceMaterial)
+        string materialResourcesPath)
         where T : Component, IScreenEffectController
     {
         if (!go.TryGetComponent(out T controller))
             controller = go.AddComponent<T>();
+
+        // 프리팹이 든 재질이 먼저. 프리팹 없이 지을 때만 Resources에서 읽는다.
+        Material sourceMaterial = controller.SourceMaterial != null
+            ? controller.SourceMaterial
+            : LoadMaterial(materialResourcesPath);
 
         controller.Bind(image, sourceMaterial);
     }

@@ -12,6 +12,7 @@ public sealed class CharacterRigCommandFactory : INodeCommandFactory
     
     private readonly CharacterDepthTuningSO _characterDepthTuning;
     private readonly IShotResponseStageProvider _stageProvider;
+    private readonly RigBlurIntentSystem _rigBlur;
 
     public CharacterRigCommandFactory(
         PresentationStage stage,
@@ -22,7 +23,8 @@ public sealed class CharacterRigCommandFactory : INodeCommandFactory
         CharacterFocusTuningDBSO characterFocusTuningDb,
         CharacterVisualFocusPresetDBSO characterVisualFocusPresetDb,
         CharacterDepthTuningSO characterDepthTuning,
-        IShotResponseStageProvider stageProvider)
+        IShotResponseStageProvider stageProvider,
+        RigBlurIntentSystem rigBlur)
     {
         _stage = stage;
         _rigSlotResolver = charRigSlotResolver;
@@ -33,6 +35,7 @@ public sealed class CharacterRigCommandFactory : INodeCommandFactory
         _characterVisualFocusPresetDb = characterVisualFocusPresetDb;
         _characterDepthTuning = characterDepthTuning;
         _stageProvider = stageProvider;
+        _rigBlur = rigBlur;
     }
 
     public bool TryCreate(CommandSpecBase spec, out ISequenceCommand command)
@@ -79,7 +82,7 @@ public sealed class CharacterRigCommandFactory : INodeCommandFactory
             SetSpriteCommandSpecCharR s => new SetSpriteCommandCharR(_stage, s),
             
             CharVisualFocusCommandSpecCharR s => new CharVisualFocusCommandCharR(_stage, s, _characterVisualFocusPresetDb),
-            DepthFocusCommandSpecCharR s => new DepthFocusCommandCharR(_stage, s),
+            DepthFocusCommandSpecCharR s => new DepthFocusCommandCharR(_rigBlur, s),
 
             _ => null
         };

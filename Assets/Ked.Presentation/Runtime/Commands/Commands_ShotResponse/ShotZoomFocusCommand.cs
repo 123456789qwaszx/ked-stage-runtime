@@ -64,9 +64,11 @@ public sealed class ShotZoomFocusCommand : ShotIntentCommandBase<ShotZoomFocusCo
             ScreenFocusPointResolver.Resolve(focus.RigSpaceRoot, spec.screenPoint) + spec.screenOffset;
 
         // 논리 focus 복원 -> 목표 배율에서 pan 역산
+        // 측정은 지금 화면에 적용된 카메라로 했으므로, 카메라를 벗기는 기준도 의도가 아니라 Presented다
+        // (전환 중이 아니면 둘은 같다).
         return Ked.Presentation.Core.ShotZoomFocusReduction
             .Reduce(
-                from.ToCore(),
+                rig.Presented.ToCore(),
                 spec.zoom,
                 focus.FocusPointInRigSpace.ToCore(),
                 desiredPoint.ToCore())

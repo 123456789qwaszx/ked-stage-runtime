@@ -38,6 +38,7 @@ public sealed class SetSpriteCommandCharR : CommandBase
 {
     private readonly SetSpriteCommandSpecCharR _spec;
 
+    private CharacterRigRefs _rig;
     private Image _image;
     private bool _resolveAttempted;
 
@@ -70,8 +71,8 @@ public sealed class SetSpriteCommandCharR : CommandBase
     {
         _resolveAttempted = true;
 
-        CharacterRigRefs rig = CharacterRigTargetResolver.ResolveCharRigFromTargetKey(_stage, _spec.slotKey);
-        _image = rig.GetImage(_spec.target);
+        _rig = CharacterRigTargetResolver.ResolveCharRigFromTargetKey(_stage, _spec.slotKey);
+        _image = _rig.GetImage(_spec.target);
     }
 
     private void Apply()
@@ -80,6 +81,10 @@ public sealed class SetSpriteCommandCharR : CommandBase
 
         // 못 찾으면 이미지를 끈다 — sprite 없는 Image는 흰 사각형을 그린다. 조용히 남기지 않는다.
         // (해석기가 이미 경고를 남겼다.) sizeDelta는 건드리지 않는다 — 코어도 그 축을 Unhandled로 두고 값을 유지한다.
+        // 밑장에 쓰기 전에 진행 중인 face_swap을 완주시킨다 — 나중 쓰기가 이긴다.
+        if (_spec.target == CharacterRigTarget.CharacterPortraitSprite_Image)
+            SetEmotionPortraitWipeCommandCharR.CompleteInFlight(_rig);
+
         _image.sprite = sprite;
         _image.enabled = sprite != null;
         _image.raycastTarget = _spec.raycastTarget;

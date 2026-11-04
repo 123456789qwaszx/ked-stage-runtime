@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public enum CleanupPolicy { Cancel, Finish }
 
@@ -28,7 +29,11 @@ public sealed class LifetimeScope
                     (finish ?? cancel)?.Invoke();
                 else cancel?.Invoke();
             }
-            catch { }
+            // 하나가 던져도 나머지 정리는 계속한다 — 다만 삼키지 않고 남긴다.
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
 
         _items.Clear();

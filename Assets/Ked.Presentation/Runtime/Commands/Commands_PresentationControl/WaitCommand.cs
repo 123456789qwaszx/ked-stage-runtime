@@ -41,7 +41,9 @@ public sealed class WaitCommand : CommandBase
                _tween.IsActive() &&
                !_tween.IsComplete())
         {
-            if (scope.Token.IsCancellationRequested)
+            // 기다리는 도중 압축(빨리 넘기기·시크)이 켜지면 그 자리에서 끝낸다 —
+            // 줄의 남은 커맨드도 압축되어 같은 프레임에 끝 상태로 가고, 그 뒤에야 관문이 다음 줄을 연다.
+            if (scope.Token.IsCancellationRequested || scope.ShouldCompressCommandExecution)
             {
                 _tween.Kill(false);
                 _tween = null;

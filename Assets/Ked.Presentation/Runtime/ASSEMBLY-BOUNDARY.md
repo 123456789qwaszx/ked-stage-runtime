@@ -111,7 +111,8 @@ Ked.Presentation.Editor (에디터 전용) ────────────�
 생략값은 `StageCommandParser.Table.cs`에만 있다 — 브리지의 전달 메서드는 전부 `= null`이다(두 곳이 되지 않게).
 
 Runtime의 `Yarn.Unity` 참조는 여전히 **0**이다 — 코어가 Yarn을 모르는 상태가 U13-b(순수 코어 추출)의 전제다.
-Yarn을 아는 것은 Playback부터다. 대사창·표면 레이아웃(`box_*`·`surface_*`)과 `debug_log`는 재생 쪽이라 브리지에 남는다.
+Yarn을 아는 것은 Playback부터다. 대사창 표면 레이아웃(`surface_*`)은 재생 쪽이라 브리지에 남는다.
+대사창 표시는 커맨드가 아니라 줄 태그(`#boxhide` · `#boxfadein` …)가 정한다(2026-11-03 `box_hide/show/close` 제거).
 
 ## 5. ⚠ `partial class`는 어셈블리를 넘을 수 없다
 
@@ -139,10 +140,10 @@ UI 타입이 기능 폴더의 계약을 구현하는 partial을 전부 여기 �
 코어가 호스트에게 무언가 요구해야 하면 `Runtime/PresentationCore/Execution/CommandRuntimePorts.cs`에
 인터페이스를 두고, 구현은 바깥 어셈블리(Playback 또는 예제)가 갖는다. 기존 예:
 
-- `IInputSource` · `ITimeSource` · `ISignalBus` · `ISignalLatch`
-- (`IUIThemePatchPort`는 `ui_patch` 커맨드용이었다. 2026-11-03에 `ui_patch`를 걷어 무대·재생에 소비자가 없다 —
-  포트 선언은 실행기 원본 `ked-command-executor`에 남아 있으니 거기서 걷는다.)
-- `ICommandPacePolicy` — 실행기가 재생 정책에서 받는 둘: 실행을 압축할지(빨리 넘기기·시크), 시간 배율.
+- (`IInputSource` · `ITimeSource` · `ISignalBus` · `ISignalLatch`는 `hold_signal`·`raise_signal`과 함께 2026-11-03에 걷었다.)
+- (`IUIThemePatchPort`는 `ui_patch` 커맨드용이었다. 2026-11-03에 `ui_patch`와 함께 걷었다.)
+- `ICommandPacePolicy` — 실행기가 재생 정책에서 받는 하나: 실행을 압축할지(빨리 넘기기·시크).
+  속도 올리기는 타자기만 빠르게 하므로 시간 배율은 없다(2026-11-03).
   구현은 Playback의 `PresentationSessionContext`가 VN 재생 상태를 접어서 준다. `CommandRunScope`는 이 정책과
   무대(`PresentationStage`)만 받는다 — VN의 자동·속도·스킵·시크 깃발은 스코프에 없다(2026-10-27)
 

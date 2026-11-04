@@ -26,6 +26,13 @@ public enum StageMaskEdgeMode
     Outline = 1 << 2,
 }
 
+public enum StageMaskClearMode
+{
+    UnmaskedFullVisible = 0,
+    MaskedHidden = 1,
+    MaskedFullRectVisible = 2,
+}
+
 public enum StageMaskRubberMode
 {
     None = 0,

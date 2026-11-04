@@ -13,8 +13,8 @@
 
 | | |
 |---|---|
-| 원본 | `ked-command-executor` · `main` @ `d12e098` |
-| 마지막 동기화 | 2026-10-27 · 원본 → 사본 (첫 반입) |
+| 원본 | `ked-command-executor` · `claude/fervent-thompson-1cqiis` @ `e82f6ba` + 2026-11-04 역반입(원본 작업 트리 — 커밋하면 해시를 여기 적는다) |
+| 마지막 동기화 | 2026-11-04 · ked-presentation-runtime의 사본에서 먼저 고친 것을 원본과 이 사본에 함께 넣었다 (S2 스텝 세대 가드 · S3/E5 신호·시간·입력 포트와 시간 배율 삭제 · E6 Run 수명 삭제 · S6 첫 진입 try). 그 전: 2026-10-27 원본 `main` @ `d12e098` → 사본 (첫 반입) |
 | 맞춘 것 | `Assets/Ked.CommandExecutor/` 전체 |
 | 코드 일치 | `.cs`·`.meta`·`.asmdef` 기준 `diff -r` 0건 (아래 "대조" 명령) |
 

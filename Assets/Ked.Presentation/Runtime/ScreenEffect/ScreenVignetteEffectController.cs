@@ -2,12 +2,48 @@ using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
+// 비네트는 장면 전역 의도다 — 커맨드가 의도를 쓰고, 화면은 이 컨트롤러가 따라간다(IntentTransition).
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Image))]
 public sealed class ScreenVignetteEffectController :
     MonoBehaviour,
     IScreenEffectController
 {
+    public readonly struct State
+    {
+        public readonly float Amount;
+        public readonly Color Color;
+        public readonly float Radius;
+        public readonly float Softness;
+        public readonly float Aspect;
+
+        public State(
+            float amount,
+            Color color,
+            float radius,
+            float softness,
+            float aspect)
+        {
+            Amount = Mathf.Clamp01(amount);
+            Color = color;
+            Radius = Mathf.Clamp01(radius);
+            Softness = Mathf.Max(0.001f, softness);
+            Aspect = Mathf.Max(0f, aspect);
+        }
+
+        public static State Lerp(State from, State to, float t)
+        {
+            t = Mathf.Clamp01(t);
+
+            return new State(
+                Mathf.Lerp(from.Amount, to.Amount, t),
+                Color.Lerp(from.Color, to.Color, t),
+                Mathf.Lerp(from.Radius, to.Radius, t),
+                Mathf.Lerp(from.Softness, to.Softness, t),
+                Mathf.Lerp(from.Aspect, to.Aspect, t));
+        }
+    }
+
     [Header("Target")]
     [SerializeField] private Image targetImage;
 
@@ -37,11 +73,32 @@ public sealed class ScreenVignetteEffectController :
     private static readonly int VignetteSoftnessId = Shader.PropertyToID("_VignetteSoftness");
     private static readonly int AspectId = Shader.PropertyToID("_Aspect");
 
+    private IntentTransition<State> _transition;
+
     public float Amount => _amount;
     public Color Color => _color;
     public float Radius => _radius;
     public float Softness => _softness;
     public float Aspect => _aspect;
+
+    public State Presented => new(_amount, _color, _radius, _softness, _aspect);
+
+    public State Intent => Transition.Intent;
+
+    public bool IsTransitioning => Transition.IsTransitioning;
+
+    private IntentTransition<State> Transition
+    {
+        get
+        {
+            if (_transition != null)
+                return _transition;
+
+            InitializeStateIfNeeded();
+            _transition = new IntentTransition<State>(Presented, () => Presented, ApplyState, State.Lerp, this);
+            return _transition;
+        }
+    }
 
     private void Reset() => EnsureTarget();
 
@@ -62,6 +119,8 @@ public sealed class ScreenVignetteEffectController :
         KillTween(false);
         DisposeMaterial();
     }
+
+    public Material SourceMaterial => sourceMaterial;
 
     public void Bind(Image image, Material material)
     {
@@ -103,12 +162,28 @@ public sealed class ScreenVignetteEffectController :
         ApplyMaterialValues();
     }
 
+    public void Follow(in State intent, float duration, Ease ease) => Transition.Follow(intent, duration, ease);
+
+    public void Snap(in State intent) => Transition.Snap(intent);
+
+    // 기준 상태 — 전환을 멈추고 세기만 0으로(색·반경 등은 남긴다).
     public void ClearImmediate()
     {
-        ApplyImmediate(0f, _color, _radius, _softness, _aspect);
+        Snap(new State(0f, _color, _radius, _softness, _aspect));
     }
 
-    public void KillTween(bool complete) => transform.DOKill(complete);
+    public void KillTween(bool complete)
+    {
+        if (complete)
+            Snap(Intent);
+        else
+            Transition.Stop();
+    }
+
+    private void ApplyState(State state)
+    {
+        ApplyImmediate(state.Amount, state.Color, state.Radius, state.Softness, state.Aspect);
+    }
 
     private void InitializeStateIfNeeded()
     {

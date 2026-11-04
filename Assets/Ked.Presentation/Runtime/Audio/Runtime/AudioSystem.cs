@@ -34,7 +34,7 @@ public sealed class AudioSystem : MonoBehaviour
         Volume.Load();
 
         Bgm   = new BgmPlayer(bgmSourceA, bgmSourceB, this);
-        Voice = new VoicePlayer(voiceSource);
+        Voice = new VoicePlayer(voiceSource, this);
         Sfx   = new SfxPool(sfxSources, sfxMaxSize);
     }
 

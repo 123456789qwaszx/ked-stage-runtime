@@ -15,7 +15,7 @@
 | `Ked.Presentation.Core.Tests` | `Assets/Ked.Presentation/Core/Tests/EditMode/` | EditMode 테스트 — 리듀서 · 이징/커브 등가 · 파서 · Unity 대조 |
 | `Ked.CommandExecutor` | `Assets/Ked.CommandExecutor/` | **반입본**(원본 ked-command-executor, [vendoring.md](Assets/Ked.CommandExecutor/Documentation~/vendoring.md)) |
 
-그 밖에 `Data/`(프리셋 DB) · `Prefabs/`(리그 셋) · `Resources/`·`Shaders/`(시각 효과) · `Audio/`(믹서) · `ExportedTuning/`(튜닝 덤프와 [schema.md](ExportedTuning/schema.md)).
+그 밖에 `Data/`(프리셋 DB) · `Prefabs/`(리그 셋) · `Resources/VisualEffects/`(시각 효과 재질과 셰이더) · `Audio/`(믹서) · `ExportedTuning/`(튜닝 덤프와 [schema.md](ExportedTuning/schema.md)).
 
 ## 모션
 

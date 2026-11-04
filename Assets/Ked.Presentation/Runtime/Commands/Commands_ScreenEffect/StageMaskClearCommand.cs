@@ -1,14 +1,6 @@
 using System;
 using System.Collections;
-using DG.Tweening;
 using UnityEngine;
-
-public enum StageMaskClearMode
-{
-    UnmaskedFullVisible = 0,
-    MaskedHidden = 1,
-    MaskedFullRectVisible = 2,
-}
 
 [Serializable]
 public sealed class StageMaskClearCommandSpec : CommandSpecBase
@@ -21,15 +13,13 @@ public sealed class StageMaskClearCommandSpec : CommandSpecBase
     public bool hideEdge = true;
 }
 
+// 무대 마스크를 정해진 모양으로 바로 둔다 — 진행 중인 tx 모션은 슬롯이 끊는다.
 public sealed class StageMaskClearCommand : CommandBase
 {
     private readonly StageMaskClearCommandSpec _spec;
     private readonly IStageMaskProvider _stageMaskProvider;
 
     private StageMaskSlot _slot;
-    private StageMaskGraphic _graphic;
-    private StageMaskEdgeGraphic _edgeGraphic;
-
     private bool _resolveAttempted;
 
     public override bool WaitForCompletion => false;
@@ -44,16 +34,16 @@ public sealed class StageMaskClearCommand : CommandBase
 
     protected override IEnumerator ExecuteInner(CommandRunScope scope)
     {
-        if (!_resolveAttempted)
-            ResolveRefs();
-
-        if (_slot == null)
-            yield break;
-
         Apply();
+        yield break;
     }
 
     protected override void OnSkip(CommandRunScope scope)
+    {
+        Apply();
+    }
+
+    private void Apply()
     {
         if (!_resolveAttempted)
             ResolveRefs();
@@ -61,51 +51,18 @@ public sealed class StageMaskClearCommand : CommandBase
         if (_slot == null)
             return;
 
-        Apply();
+        _slot.Clear(_spec.mode, _spec.hideEdge);
     }
 
     private void ResolveRefs()
     {
         _resolveAttempted = true;
-        
-        IStageMaskProvider provider = _stageMaskProvider;
 
-        if (!provider.TryGetStageMaskSlot(_spec.stage, out _slot) || _slot == null)
+        if (!_stageMaskProvider.TryGetStageMaskSlot(_spec.stage, out _slot) || _slot == null)
         {
             Debug.LogWarning(
                 $"[StageMaskClearCommand] StageMaskSlot is missing. " +
                 $"stage='{_spec.stage}'.");
-            return;
         }
-
-        _graphic = _slot.Graphic;
-        _edgeGraphic = _slot.EdgeGraphic;
-    }
-
-    private void Apply()
-    {
-        if (_graphic != null)
-            DOTween.Kill(_graphic, true);
-
-        if (_edgeGraphic != null)
-            DOTween.Kill(_edgeGraphic, true);
-
-        switch (_spec.mode)
-        {
-            case StageMaskClearMode.UnmaskedFullVisible:
-                _slot.SetFullVisible();
-                break;
-
-            case StageMaskClearMode.MaskedHidden:
-                _slot.SetMaskedHidden();
-                break;
-
-            case StageMaskClearMode.MaskedFullRectVisible:
-                _slot.SetMaskedFullRectVisible();
-                break;
-        }
-
-        if (_spec.hideEdge)
-            _slot.SetEdgeVisible(false);
     }
 }

@@ -30,7 +30,7 @@ public class StageCommandParserTests
         Assert.IsTrue(StageCommandParser.Knows("1fr"));
         Assert.IsTrue(StageCommandParser.Knows($"{StageCommandParser.FramePauseAliasMaxFrame}fr"));
         Assert.IsFalse(StageCommandParser.Knows($"{StageCommandParser.FramePauseAliasMaxFrame + 1}fr"));
-        Assert.IsFalse(StageCommandParser.Knows("box_hide"), "대사창은 무대 커맨드가 아니다");
+        Assert.IsFalse(StageCommandParser.Knows("surface_reset"), "대사창은 무대 커맨드가 아니다");
         Assert.IsFalse(StageCommandParser.Knows(null));
     }
 

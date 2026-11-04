@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Every command is guaranteed one execution entry (first MoveNext);
-// ticket.MarkCommandEntered() records the entry right after.
+// Every command is guaranteed one execution entry (first MoveNext), run synchronously in PlayCommands.
+// A command that throws on entry is logged and skipped — the rest of the step still runs.
 public sealed class SequencePlayer
 {
     private readonly MonoBehaviour _host;
@@ -24,7 +24,21 @@ public sealed class SequencePlayer
             ISequenceCommand command = commands[i];
             IEnumerator routine = command.Execute(scope);
 
-            bool hasMore = routine.MoveNext();
+            // 첫 진입(압축이면 OnSkip까지)이 던져도 그 커맨드만 빠지고 나머지는 돈다 —
+            // 라이브(ExecuteInner 본문은 유니티가 따로 잡는다)와 압축 재생의 결과가 같아야 리플레이가 갈리지 않는다.
+            bool hasMore;
+
+            try
+            {
+                hasMore = routine.MoveNext();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[SequencePlayer] '{command.GetType().Name}' threw on entry — skipped.");
+                Debug.LogException(e);
+                continue;
+            }
+
             object firstYield = hasMore 
                 ? routine.Current 
                 : null;
@@ -75,16 +89,11 @@ public sealed class SequencePlayer
         }
     }
     
-    // Binds a background routine to its cleanup lifetime.
-    // Run is matched first, so a command that opts into IRunScopedCommand overrides the step-scoped default.
+    // Binds a background routine to the step lifetime (cleaned at the next step boundary).
     private void BindBackgroundLifetime(ISequenceCommand command, CommandRunScope scope, IEnumerator routine)
     {
         switch (command)
         {
-            case IRunScopedCommand runScoped:
-                runScoped.RegisterRunLifetime(scope, _host, routine);
-                break;
-
             case IStepScopedCommand stepScoped:
                 stepScoped.RegisterStepLifetime(scope, _host, routine);
                 break;
@@ -92,8 +101,8 @@ public sealed class SequencePlayer
             default:
                 Debug.LogWarning(
                     $"[SequencePlayer] Background command '{command.GetType().Name}' implements no " +
-                    $"lifetime scope. Derive from CommandBase, or implement IStepScopedCommand / " +
-                    $"IRunScopedCommand. Binding to StepLifetime as a fallback.");
+                    $"lifetime scope. Derive from CommandBase, or implement IStepScopedCommand. " +
+                    $"Binding to StepLifetime as a fallback.");
 
                 scope.TrackStep(
                     cancel: () => _host.StopCoroutine(routine),
