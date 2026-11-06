@@ -91,7 +91,7 @@ Bjørge, *Bandwidth-Efficient Rendering*, SIGGRAPH 2015 Mobile Graphics (ARM).
 
 ### 캐릭터 — 밉맵 + 십자 4탭
 
-`Assets/Ked.Presentation/Resources/VisualEffects/CharacterBlur.hlsl`.
+`Assets/Ked.Presentation/Stage/Resources/VisualEffects/CharacterBlur.hlsl`.
 
 **밉맵은 이미 블러다.** 밉 체인은 로드 시점에 박스 필터로 만들어진다 — 레벨 n은 2ⁿ×2ⁿ 영역의 평균이다.
 LOD 4를 읽는 것은 16×16 박스 블러를 **1탭**에 얻는 것이고, 메모리는 +33%(1+¼+⅟₁₆+… = 4/3)뿐이다.
@@ -189,7 +189,7 @@ coc = saturate(|depthScale_char − depthScale_focus| × falloff) × maxBlur
 깊이는 `size` 커맨드로 갈리기 때문에, 레이어를 기준으로 삼으면 전원이 같은 값이 되어
 **v2의 실패를 그대로 반복한다.**
 
-그래서 `CharacterRigRefs.SettledDepthScale`을 추가했다. `SetDepthCommandCharR`가 목표값을
+그래서 `CharacterRigRefs.SettledDepthScale`을 추가했다. `SetDepthCommandCharR`가 끝값을
 확정할 때 기록하므로 **트윈이 도는 중에도 "끝나면 어디인가"** 를 들고 있다 — 정지 프레임 원칙.
 열거형이 아니라 스케일 값인 이유는 `useLevel=true` 경로에 프리셋 키가 없고, 공식이 필요로 하는
 것도 스케일이기 때문이다.
@@ -202,7 +202,7 @@ coc = saturate(|depthScale_char − depthScale_focus| × falloff) × maxBlur
 ### 블러를 쓰는 커맨드가 셋이다 — 출처를 나누고 가장 큰 값으로 합친다 (2026-11-03)
 
 `focus_on` · `screen_blur` · `char_visual_*`(프리셋의 `blur` 필드)가 모두 `_BlurAmount`에 닿는다.
-예전에는 셋이 같은 값을 서로 다른 트윈 타깃으로 써서 **동시에 걸면 매 프레임 싸웠고**,
+예전에는 셋이 같은 값을 서로 다른 트윈 대상으로 써서 **동시에 걸면 매 프레임 싸웠고**,
 blur가 0인 `char_visual` 프리셋(dim·rim·clear …)은 앞서 걸린 초점·레이어 블러를 지웠다.
 
 지금은 리그의 `RigVisualEffectController`가 출처를 따로 든다:
@@ -217,6 +217,7 @@ blur가 0인 `char_visual` 프리셋(dim·rim·clear …)은 앞서 걸린 초�
 - 각 출처의 전환은 컨트롤러가 하나씩 소유한다(`IntentTransition`). 커맨드는 목표만 넘기고,
   새 목표는 지금 보이는 값에서 다시 조준한다. 같은 줄에 두 번 걸어도 나중 것이 이긴다.
 - 스텝 경계 가속(×1.5)은 그대로다 — 커맨드가 컨트롤러의 전환을 가속시킨다.
+  2026-11-06부터 가속은 전환 트윈의 `timeScale`이다 — 다시 만들지 않고 같은 곡선을 빠르게 이어 간다.
 
 ### 초점·레이어 블러는 장면 전역 의도다 (2026-11-03)
 
@@ -224,7 +225,7 @@ blur가 0인 `char_visual` 프리셋(dim·rim·clear …)은 앞서 걸린 초�
 그래서 뒤에 등장한 캐릭터는 선명했고, `size`로 깊이가 바뀌어도, `char_to`로 블러 레이어를 드나들어도 따라가지 않았다.
 
 지금은 `RigBlurIntentSystem`이 의도(초점 대상·falloff·최대 흐림, 무대·레이어별 양)를 든다. 커맨드는 의도만 넘긴다.
-줄 머리에서 커맨드가 다 돈 뒤(`YarnPlaybackDriver.LineHeadPlayed`) 시스템이 살아 있는 리그 전부의 목표를 다시 정한다 —
+줄 머리에서 커맨드가 다 돈 뒤(줄 흐름 `LinePresentationFlow`가 `Reconcile`을 부른다 — 2026-11-06까지는 드라이버 이벤트를 예제가 이었다) 시스템이 살아 있는 리그 전부의 목표를 다시 정한다 —
 처음 보는 리그는 Snap(등장 중이라 티가 나지 않는다), 목표가 바뀐 리그는 Follow, 압축 중이면 모두 Snap.
 초점 대상 키는 줄마다 다시 풀므로 배역 키면 슬롯을 옮겨도 따라간다. `pause` 뒤(같은 줄 후반)의 변화는 다음 줄 머리에서 따라간다.
 정지에서 의도를 비운다 — 리플레이가 커맨드를 다시 지나가며 세운다.

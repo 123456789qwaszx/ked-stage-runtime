@@ -40,13 +40,24 @@ namespace Ked.Presentation.Core
         public PortraitDimensionsFileDto PortraitDimensions;
 
         /// <summary>
-        /// motions.json — 이름 → 클립(검증된 것만). motion 폴드가 채널마다 마지막 키를 클레임으로 접는다.
+        /// motions.json — 이름 → 클립(검증된 것만). motion 폴드가 채널마다 마지막 키를 타깃으로 접는다.
         /// 없으면(null) motion 커맨드는 Unhandled — 재생이 모션을 읽었다면 폴드도 같은 파일을 받아야 한다.
         /// </summary>
         public IReadOnlyDictionary<string, MotionClip> Motions;
 
         /// <summary>background-dimensions.json — 배경(bg_*) 사이징의 종횡비. 없으면 그 축만 Unhandled.</summary>
         public BackgroundDimensionsFileDto BackgroundDimensions;
+
+        /// <summary>
+        /// presets/layer-profile.json — 깊이 층이 샷에 반응하는 곡선(ShotLayoutMath). 없으면(null) 코어 기본
+        /// 표본(LayerProfileCurve.Default = 종전 다섯 층 값)을 쓴다. 층 반응은 상태에 저장하지 않고
+        /// 샷 의도 + 부착된 층 d에서 푼다(StageState.AttachedLayerDepths, StageStateComparer.CompareStageView).
+        /// </summary>
+        public LayerProfileFileDto LayerProfile;
+
+        /// <summary>LayerProfile이 있으면 그 곡선, 없으면 코어 기본(= 런타임 조립이 쓰는 값).</summary>
+        public LayerProfileCurve ResolveLayerProfileCurve()
+            => LayerProfile != null ? LayerProfileCurve.FromDto(LayerProfile) : LayerProfileCurve.Default;
     }
 
     /// <summary>
@@ -61,14 +72,14 @@ namespace Ked.Presentation.Core
     /// 이 기록이 "아직 못 접는 것"의 유일한 진실이고, 수렴의 작업 목록이 된다.
     ///
     /// 현재 어휘(v1): slot 계열(리그 스폰) · cast/actor(배역·별칭) ·
-    ///   show(리셋+앵커+사이징+가시성) · fade_in/out · slide_in/out · place/size 계열 ·
-    ///   nudge/move/scale/rotate 계열 · shot 5종 · char_to 계열 ·
+    ///   show(리셋+앵커+사이징+가시성) · fade_in/out · fade · slide_in/out · place/size 계열 ·
+    ///   nudge/move/scale/rotate 계열 · shot 5종 ·
     ///   초상 축(pose/face/face_swap) · motion(채널마다 마지막 키) · 시간 커맨드(pause·Nfr — 접을 것이 없다) ·
     ///   배경 bg_*(캐스팅하지 않은 슬롯 — spawn/sprite/fade/move/scale).
     /// 명시적 한계: 오버레이/이펙트/오디오/트랜지션 리그, 대사창,
-    ///   절차적 연기 커맨드(목표값이 정의되지 않음).
+    ///   절차적 연기 커맨드(끝값이 정의되지 않음).
     ///
-    /// ⚠ v1 가정 — 등가성 하네스가 판정한다:
+    /// 가정 — 등가성 하네스가 판정한다:
     /// 1. 스테이지/레이어 컨테이너는 항등 트랜스폼(스트레치 풀)이라 리그를 루트 직속으로
     ///    세워도 좌표가 같다. 컨테이너 스키마는 덤프에 없다 — 어긋나면 덤프에 추가한다.
     /// 2. 커맨드 기본값은 브리지 시그니처에서 옮겨 박았다(각 case의 주석 참조).
@@ -156,10 +167,11 @@ namespace Ked.Presentation.Core
                 // fade — 브리지와 같은 표적(CharacterPortraitSprite_Root).
                 case "fade_in": return ApplyFade(state, cmd, visible: true, out reason);
                 case "fade_out": return ApplyFade(state, cmd, visible: false, out reason);
+                case "fade":     return ApplyFadeTo(state, cmd, out reason);   // fade(slot, alpha="1", dur) — 반투명까지
 
                 // place 계열 — focus 지점을 화면 지점으로 (SettledFocusMath.SolveFocusPlacement).
                 // 파서 표: place(role, focus="bust", screenPoint="center") /
-                //          place_left·center·right(role, focus="face") — 화면 지점이 이름에 박힌 것은 이 셋만 남겼다(소유자 결정).
+                //          place_left·center·right(role, focus="face") — 화면 지점이 이름에 박힌 것은 이 셋뿐이다.
                 case "place": return ApplyPlace(state, cmd, tuning, cmd.Arg(2, "center"), "bust", out reason);
                 case "place_left": return ApplyPlace(state, cmd, tuning, "left", "face", out reason);
                 case "place_center": return ApplyPlace(state, cmd, tuning, "center", "face", out reason);
@@ -190,11 +202,7 @@ namespace Ked.Presentation.Core
                 case "char_scale_to":  return ApplyPortraitScaleTo(state, cmd, out reason);
                 case "char_rotate_to": return ApplyPortraitRotateTo(state, cmd, out reason);
 
-                // gesture — 제자리 몸짓. 순변위 0이라 접을 것이 없다(정지 프레임은 이미 옳다).
-                // 곡선·진폭을 읽지 않으므로 인자 자리에 의존하지 않는다.
-                case "gesture": return ApplyGesture(state, cmd, out reason);
-
-                // motion — 채널마다 마지막 키가 클레임이다. 샘플링하지 않는다(MotionMath.ClaimFor).
+                // motion — 채널마다 마지막 키가 타깃이다. 샘플링하지 않는다(MotionMath.TargetFor).
                 case "motion": return ApplyMotion(state, cmd, tuning, out reason);
 
                 // shot
@@ -202,13 +210,10 @@ namespace Ked.Presentation.Core
                 case "shot_to":    return ApplyShotTo(state, cmd, tuning, out reason);
                 case "shot_track": return ApplyShotTrack(state, cmd, tuning, out reason);
                 case "shot_reset":
-                    state.Shot = ShotResetReduction.Reduce();
+                    state.Shot = ShotIntents.Reset();
                     return true;
 
                 case "shot_focus_to": return ApplyShotFocusTo(state, cmd, tuning, out reason);
-
-                // 구조 축 (v1: 부착 기록만 — 컨테이너 항등 가정으로 좌표 영향 없음)
-                case "char_to": return ApplyCharTo(state, cmd, cmd.Arg(1, "stage00"), cmd.Arg(2, "mid"), out reason);
 
                 // 배경 — 캐스팅하지 않은 슬롯. StageCommandParser.Background가 캐릭터 Spec으로 펼치는 것을 그대로 접는다.
                 // 인자 자리·생략값은 파서 표(StageCommandParser.Table)와 같다:
@@ -279,16 +284,16 @@ namespace Ked.Presentation.Core
         private static bool TryGetSpawnedSlot(
             StageState state, in StageCommand cmd, out string slotKey, out string reason)
         {
-            if (!TryGetSlotKey(cmd, out string targetKey, out reason))
+            if (!TryGetSlotKey(cmd, out string roleKey, out reason))
             {
                 slotKey = null;
                 return false;
             }
 
             // 별칭("@3")·캐릭터 키("parkeunseol")도 슬롯으로 푼다 (actor/cast 축).
-            if (!state.TryResolveSlot(targetKey, out slotKey))
+            if (!state.TryResolveSlot(roleKey, out slotKey))
             {
-                reason = $"대상 '{targetKey}'를 슬롯으로 풀 수 없다 (slot/cast/actor 선행 필요)";
+                reason = $"대상 '{roleKey}'를 슬롯으로 풀 수 없다 (slot/cast/actor 선행 필요)";
                 return false;
             }
 

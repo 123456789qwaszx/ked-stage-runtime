@@ -25,8 +25,7 @@ namespace Ked.Presentation.Core
         /// **같은 키 재선언은 리그를 새로 세운다.** 런타임 SetupCharRigCommand는 매번 새 리그를 짓고
         /// CharacterRigRegistry.Register가 옛 리그를 부순다 — 노드는 스키마 초기값으로, 가시성은 스키마 α로
         /// 돌아간다. 배역·변형·별칭은 CastRegistry 쪽이라 남는다. 그래서 여기서도 노드와 α만 되돌린다.
-        /// (예전 주석은 "런타임은 기존 리그를 재사용한다"였다 — 사실이 아니었다. 배경을 합치며 같은 키의
-        ///  `bg_spawn` 재선언을 검토하다 드러나 바로잡았다, 2026-10-29. 배경 그림만 바꾸는 것은 `bg_sprite`다.)
+        /// 배경 그림만 바꾸는 것은 `bg_sprite`다.
         /// </summary>
         private static bool SpawnSlot(
             StageState state, string slotKey, StageReducerTuning tuning,
@@ -144,27 +143,15 @@ namespace Ked.Presentation.Core
             reason = null;
 
             string aliasSymbol = cmd.Arg(0);
-            string targetKey = cmd.Arg(1);
+            string roleKey = cmd.Arg(1);
 
-            if (string.IsNullOrEmpty(aliasSymbol) || string.IsNullOrEmpty(targetKey))
+            if (string.IsNullOrEmpty(aliasSymbol) || string.IsNullOrEmpty(roleKey))
             {
                 reason = "actor 인자가 모자란다 (별칭, 대상)";
                 return false;
             }
 
-            state.SetAlias(aliasSymbol, targetKey);
-            return true;
-        }
-
-        // ── 구조 ─────────────────────────────────────────────────────
-
-        private static bool ApplyCharTo(
-            StageState state, in StageCommand cmd, string stageKey, string layerKey, out string reason)
-        {
-            if (!TryGetSpawnedSlot(state, cmd, out string slotKey, out reason))
-                return false;
-
-            state.SetAttachment(slotKey, new SlotAttachment(stageKey, layerKey));
+            state.SetAlias(aliasSymbol, roleKey);
             return true;
         }
     }

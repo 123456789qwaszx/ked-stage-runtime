@@ -16,7 +16,7 @@
 | 산출물 | **motions.json** | 원본을 변환한 것. **손으로 고치지 않는다.** 게임 콘텐츠라 대본 번들 곁(`curves.json` 옆)에 산다 |
 | 제작 리그 | `Editor/MotionAuthoringRig` (메뉴 Ked/Motion/Create Authoring Rig) | 재생이 쓰는 `CharacterRigBuilder`가 **스키마로** 세운다 — 손으로 만든 프리팹을 쓰지 않는다. 기준 해상도 캔버스 아래, 초상 알파 1 |
 | 내보내기 | `Editor/MotionClipExporter` | 의존은 **Core + rig-schemas.json**뿐이다(런타임 스키마 코드를 모른다). 노드는 끝 이름이 아니라 **부모 사슬 전체**를 대조한다 — 계층이 다른 리그에서 만든 클립은 거부. 언젠가 따로 떼어도 코드가 안 바뀐다 |
-| 재생·정지 프레임 | `Runtime/MotionCommandCharR` · `Core/StageReducer`(`motion`) | 같은 `MotionMath`를 지난다 |
+| 재생·정지 프레임 | `Stage/Character/Commands/MotionCommandCharR` · `Core/StageReducer`(`motion`) | 같은 `MotionMath`를 지난다 |
 | 대본 | VnTool | `<<motion slot 이름 [relative\|absolute]>>`. 어디로·언제·**어떻게 읽을지(mode)**는 대본, 무엇이 움직이는지는 모션 |
 
 의존 방향: 모션 툴 → Core · 데이터. 무대 런타임 → Core. **무대 런타임은 모션 툴을 모르고, 모션 툴은 재생·VnTool을 모른다.**
@@ -74,7 +74,7 @@ Transform 경로는 파일에 없다. 내보내기가 경로를 노드 id로 바
 
 | | 남는 것 | 재생이 끝에서 쓰는 값 | 정지 프레임 | 장부 |
 |---|---|---|---|---|
-| `restore` | 없음 — 흔들기·끄덕임 | **시작값**(마지막 키가 무엇이든) | 무변(gesture와 같다) | 게시 없음 |
+| `restore` | 없음 — 흔들기·끄덕임 | **시작값**(마지막 키가 무엇이든) | 무변 | 게시 없음 |
 | `commit` | 마지막 키 — 고개 숙인 채로, 자세 바꾸기 | 마지막 키를 mode로 합성한 값 | 채널마다 **마지막 키**를 클레임으로 접는다 | 시작 시 종점 게시 |
 
 종점은 평가 결과가 아니라 **키 값**이다. 그래서 리듀서는 샘플링하지 않고, "이징은 종점에 관여하지 않는다"가 모션에서도 선다.
@@ -87,7 +87,7 @@ Transform 경로는 파일에 없다. 내보내기가 경로를 노드 id로 바
 ## 4. 충돌
 
 한 노드 = 한 축. 같은 노드를 두 커맨드가 잡으면 뒤의 것이 `DOKill(true)`로 앞의 것을 **완주**시키고 시작한다 —
-`move_by`·`gesture`와 같은 규약이다. 모션은 노드마다 트윈 하나라 이 규약을 그대로 탄다. 모션 둘이 같은 노드를 키잉해도 같다.
+`move_by`와 같은 규약이다. 모션은 노드마다 트윈 하나라 이 규약을 그대로 탄다. 모션 둘이 같은 노드를 키잉해도 같다.
 Skip·스텝 경계에서는 즉시 종점(commit)이나 시작값(restore)으로 확정한다. 가속은 없다 — 초 단위 진행이라 "남은 거리"가 없다.
 
 ## 5. 내보내기가 받는 것 (v1)

@@ -3,7 +3,7 @@
     "rootNamespace": "",
     "references": [
         "Ked.Presentation.Core",
-        "Ked.Presentation.Runtime",
+        "Ked.Presentation.Stage",
         "Ked.CommandExecutor",
         "UnityEngine.UI",
         "DOTween.Modules"

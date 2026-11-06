@@ -27,7 +27,7 @@ public abstract class CommandBase : ISequenceCommand, IStepScopedCommand
                     yield break;
 
                 case SkipPolicy.CompleteImmediately:
-                    OnSkip(scope);
+                    OnSkip();
                     yield break;
 
                 case SkipPolicy.ExecuteEvenIfSkipping:
@@ -43,9 +43,7 @@ public abstract class CommandBase : ISequenceCommand, IStepScopedCommand
 
     protected abstract IEnumerator ExecuteInner(CommandRunScope scope);
 
-    protected virtual void OnSkip(CommandRunScope scope)
-    {
-    }
+    protected virtual void OnSkip() { }
     
     // Default step-lifetime binding.
     // Background routines are stopped at the next step boundary.
@@ -64,11 +62,11 @@ public abstract class CommandBase : ISequenceCommand, IStepScopedCommand
                 if (routine != null)
                     host.StopCoroutine(routine);
                 
-                OnStepLifetimeFinished(scope);
+                OnStepLifetimeFinished();
             });
     }
     
     // Completion hook tied to step cleanup (CleanupPolicy.Finish).
     // Called when the step finishes (normal end / finish-all), not on Cancel-only cleanup.
-    protected virtual void OnStepLifetimeFinished(CommandRunScope scope) { }
+    protected virtual void OnStepLifetimeFinished() { }
 }

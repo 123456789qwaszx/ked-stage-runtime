@@ -9,13 +9,14 @@
 
 | 어셈블리 | 자리 | 무엇 |
 |---|---|---|
-| `Ked.Presentation.Core` | `Assets/Ked.Presentation/Core/` | 순수 C#(엔진 의존 0) — 정지 프레임 리듀서 · 장부 · 클레임 · shot 의도 · 이징·커브·진동 · 튜닝 DTO · `StageCommand`. 저작 도구(VnTool)가 그대로 반입한다 |
-| `Ked.Presentation.Runtime` | `Assets/Ked.Presentation/Runtime/` | Unity 실행 계층 — `Stage`(무대 상태) · `Commands`(커맨드 · 팩토리 · **`StageCommandParser`**) · `CharacterRig`(배경도 이 리그 — 캐스팅하지 않은 슬롯) · `ShotResponse` · `ScreenEffect` · `StageMask` · `Audio`. 경계의 근거는 [`Runtime/ASSEMBLY-BOUNDARY.md`](Assets/Ked.Presentation/Runtime/ASSEMBLY-BOUNDARY.md) |
-| `Ked.Presentation.Editor` | `Assets/Ked.Presentation/Editor/` | 초상 DB 빌더 · 튜닝 덤프 익스포터 · 이징 골든 |
-| `Ked.Presentation.Core.Tests` | `Assets/Ked.Presentation/Core/Tests/EditMode/` | EditMode 테스트 — 리듀서 · 이징/커브 등가 · 파서 · Unity 대조 |
+| `Ked.Presentation.Core` | `Assets/Ked.Presentation/Core/` | 계산. 커맨드가 끝나면 노드가 어떤 값이어야 하는가(`NodeTargets` · `ShotIntents`), 커맨드를 정지 프레임으로 접는 리듀서, 대본 낱말(`12fr` · `2u`), 이징·모션 수학, 튜닝 형식. 순수 C#(엔진 참조 0)이라 저작 툴이 그대로 반입한다 |
+| `Ked.Presentation.Stage` | `Assets/Ked.Presentation/Stage/` | 무대 실행. 기능 하나에 폴더 하나 — `Grammar`(대본 문법의 뜻, **`StageCommandParser`**) · `StageRig`(Stage00/01/02 · 깊이 층) · `Character`(캐릭터 리그 — 배경도 이 리그, 캐스팅하지 않은 슬롯) · `Shot` · `ScreenEffect` · `Audio` · `Control`. 리그 프리팹 · 셰이더 · 프리셋 기본값도 여기 있다 |
+| `Ked.Presentation.Editor` | `Assets/Ked.Presentation/Editor/` | 튜닝·모션 내보내기, 초상 DB 빌더 |
+| `Ked.Presentation.Tests.EditMode` | `Assets/Ked.Presentation/Tests/EditMode/` | EditMode 테스트 — 리듀서 · 이징/커브 등가 · 파서 · Unity 대조 |
 | `Ked.CommandExecutor` | `Assets/Ked.CommandExecutor/` | 실행기 — 원본 ked-presentation-runtime의 한 벌([vendoring.md](Assets/Ked.CommandExecutor/Documentation~/vendoring.md)) |
 
-그 밖에 `Data/`(프리셋 DB) · `Prefabs/`(리그 셋) · `Resources/VisualEffects/`(시각 효과 재질과 셰이더) · `Audio/`(믹서) · `ExportedTuning/`(튜닝 덤프와 [schema.md](ExportedTuning/schema.md)).
+폴더 하나에 어셈블리 하나다. 자세한 배치는 [`Assets/Ked.Presentation/README.md`](Assets/Ked.Presentation/README.md)(원본과 같은 파일이라 재생 층 `Playback/`도 적혀 있다 — 이 저장소에는 없다), 경계의 근거는 [`ASSEMBLY-BOUNDARY.md`](Assets/Ked.Presentation/Documentation~/ASSEMBLY-BOUNDARY.md).
+그 밖에 `ExportedTuning/`(튜닝 덤프와 [schema.md](ExportedTuning/schema.md)).
 
 ## 모션
 
@@ -27,7 +28,7 @@
 ## 무엇을 모르나
 
 - **재생을 모른다.** 줄 진행·롤백·백로그·시크·대사창·Yarn은 재생 저장소에 있다. 여기가 받는 것은 코어의 `StageCommand`(이름 + 문자열 인자)뿐이다.
-- **철도를 깔지 않는다.** 무대 계약(`IShotResponseStageProvider` · `IStageDepthContentSlotProvider` · `IStageMaskProvider` · `IRigPrefabSource`)만 둔다. 구현은 씬을 가진 쪽(재생 저장소의 `PresentationUIRoot`)이 한다.
+- **무대를 놓을 자리는 모른다.** 무대 리그(`StageRigBuilder` · `StageRigRegistry`)는 여기서 세우지만, 어느 캔버스 아래에 둘지(mount)는 씬을 가진 쪽(재생 저장소의 조립부)이 정한다. 에디터 도구는 `IRigPrefabSource` 계약으로만 씬의 리그 프리팹에 닿는다.
 
 ## 세 계통 — 상태 소유권
 
@@ -37,9 +38,9 @@
 |---|---|---|
 | 철도(shot) | `StageState.Shot` · 무대 pan/zoom 루트 · 층 프레이밍 | `shot_*` |
 | 열차 배치(슬롯 축) | `Track_Focus`(해) · `DepthY`·`DepthScale` · `Track*`·`Rotation`·`SwayPivot`·`Scale` | `place`·`size`·`move_by`·`left/right/up/down`·`rotate_by`·`scale_by` |
-| 열차 연기(초상 축) | `CharacterPortrait_*` | `gesture`·`char_rotate_to`·`char_scale_to`·`mirror`·`face`·`pose` |
+| 열차 연기(초상 축) | `CharacterPortrait_*` | `motion`·`char_rotate_to`·`char_scale_to`·`mirror`·`face`·`pose` |
 
-리그 계층이 왜 이 순서인지는 [`rig-axis-order.md`](Assets/Ked.Presentation/Runtime/CharacterRig/Documentation~/rig-axis-order.md), 리덕션 규약은 [`reduction-boundary.md`](Assets/Ked.Presentation/Core/Documentation~/reduction-boundary.md).
+리그 계층이 왜 이 순서인지는 [`rig-axis-order.md`](Assets/Ked.Presentation/Stage/Character/Rig/Documentation~/rig-axis-order.md), 목표 계산 규약은 [`target-boundary.md`](Assets/Ked.Presentation/Core/Documentation~/target-boundary.md).
 
 ## 이름에 대해
 

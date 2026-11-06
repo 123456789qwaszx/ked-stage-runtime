@@ -50,21 +50,10 @@ public class CommandExecutor : MonoBehaviour
     {
         var list = new List<ISequenceCommand>();
 
-        if (specs == null)
-            return list;
-
         for (int i = 0; i < specs.Count; i++)
         {
-            CommandSpecBase spec = specs[i];
-
-            if (spec == null)
+            if (!_factory.TryCreate(specs[i], out ISequenceCommand command))
                 continue;
-
-            if (!_factory.TryCreate(spec, out ISequenceCommand command) || command == null)
-            {
-                Debug.LogWarning($"Spec[{i}] {spec.GetType().Name} failed: factory could not create command.");
-                continue;
-            }
 
             list.Add(command);
         }

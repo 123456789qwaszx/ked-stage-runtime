@@ -9,13 +9,13 @@ using UnityEditor;
 using UnityEngine;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// W66b — 이징 골든 덤프.
+// 이징 골든 덤프.
 //
 // VnTool 프리뷰가 그릴 곡선 모양의 정본. DOTween EaseManager.Evaluate를
 // 표준 Ease 전 항목 × t ∈ [0,1] 257등분으로 샘플링해 JSON으로 낸다.
 // (표준 = Unset·INTERNAL_* 제외. 이 덤프의 목록이 곧 정본이다.)
 //
-// 원칙 (U12 PresentationTuningExporter와 같다):
+// 원칙 (PresentationTuningExporter와 같다):
 // - 값은 지금 값 그대로 — Back·Elastic·Flash가 쓰는 overshoot/period 기본값은
 //   DOTween의 라이브 기본값(DOTween.defaultEaseOvershootOrAmplitude/-Period)을
 //   읽어 파일에 명시한다.

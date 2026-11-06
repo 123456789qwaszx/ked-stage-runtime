@@ -197,8 +197,8 @@ public static class PortraitDbBuilder
 
     // 초상 에셋 규약: <스캔 뿌리>/<캐릭터>/<변형>/<표정>.png
     //
-    //   Assets/Samples/Portraits/harin/b/03.png
-    //   뿌리 = Assets/Samples/Portraits, 캐릭터 = harin, 변형 = b, 표정 = 03
+    //   Assets/Samples/Content/Portraits/harin/b/03.png
+    //   뿌리 = Assets/Samples/Content/Portraits, 캐릭터 = harin, 변형 = b, 표정 = 03
     //
     // 변형이 폴더로 서면서 파일 이름에서 캐릭터·변형이 빠졌다. 그래서 variantKey는
     // 종전의 'harin_b'가 아니라 폴더 이름 그대로인 'b'다 —
@@ -265,7 +265,7 @@ public static class PortraitDbBuilder
     private static bool HasErrors(List<string> report)
         => report.Any(r => r.Contains("[ERROR]"));
 
-    // 설정 에셋은 타입으로 찾는다 — 어느 폴더에 두든 된다(예제는 Assets/Samples/Data/).
+    // 설정 에셋은 타입으로 찾는다 — 어느 폴더에 두든 된다(예제는 Assets/Samples/Settings/).
     // 하나도 없을 때만 기본 자리(DefaultSettingsPath)에 새로 만든다.
     private static PortraitBuildSettings LoadOrCreateSettings()
     {
